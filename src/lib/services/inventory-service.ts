@@ -62,6 +62,7 @@ export type ListInventoryParams = {
   pageSize: number;
   status?: InventoryStatus;
   includeArchived?: boolean;
+  productIds?: ObjectId[];
 };
 
 export async function listInventory(
@@ -73,6 +74,9 @@ export async function listInventory(
     delete filter.status;
   } else if (params.status) {
     filter.status = params.status;
+  }
+  if (params.productIds && params.productIds.length > 0) {
+    filter.productId = { $in: params.productIds };
   }
 
   const inventories = await collection();

@@ -126,6 +126,12 @@ async function brandModelIds(brandId: ObjectId): Promise<ObjectId[]> {
   return models.map((model) => model._id);
 }
 
+export type ProductListingSort =
+  | "name_asc"
+  | "newest"
+  | "price_asc"
+  | "price_desc";
+
 export type ListProductsParams = {
   page: number;
   pageSize: number;
@@ -134,6 +140,9 @@ export type ListProductsParams = {
   status?: ProductStatus;
   q?: string;
   includeArchived?: boolean;
+  sort?: ProductListingSort;
+  minPriceCents?: number;
+  maxPriceCents?: number;
 };
 
 export async function listProducts(
@@ -149,6 +158,20 @@ export async function listProducts(
   }
   if (params.q) {
     filter.name = { $regex: escapeRegex(params.q), $options: "i" };
+  }
+
+  if (
+    params.minPriceCents !== undefined ||
+    params.maxPriceCents !== undefined
+  ) {
+    const range: { $gte?: number; $lte?: number } = {};
+    if (params.minPriceCents !== undefined) {
+      range.$gte = params.minPriceCents;
+    }
+    if (params.maxPriceCents !== undefined) {
+      range.$lte = params.maxPriceCents;
+    }
+    filter.priceCents = range;
   }
 
   if (params.brandId) {
@@ -172,11 +195,18 @@ export async function listProducts(
 
   const products = await collection();
 
+  const sortMap: Record<ProductListingSort, Record<string, 1 | -1>> = {
+    name_asc: { name: 1 },
+    newest: { createdAt: -1 },
+    price_asc: { priceCents: 1 },
+    price_desc: { priceCents: -1 },
+  };
+
   const [total, items] = await Promise.all([
     products.countDocuments(filter),
     products
       .find(filter)
-      .sort({ name: 1 })
+      .sort(sortMap[params.sort ?? "name_asc"])
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .toArray(),
