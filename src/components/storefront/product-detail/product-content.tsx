@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/ui/container";
 import { Skeleton } from "@/components/ui/states";
 import { formatPrice } from "@/components/storefront/home/price";
@@ -158,6 +159,7 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
           </div>
 
           <RecapPanel
+            productId={product.id}
             priceCents={product.priceCents}
             currency={product.currency}
             inStock={inStock}
@@ -300,6 +302,7 @@ function Highlights({ deviceCount }: { deviceCount: number }) {
 }
 
 function RecapPanel({
+  productId,
   priceCents,
   currency,
   inStock,
@@ -307,6 +310,7 @@ function RecapPanel({
   availableQuantity,
   productName,
 }: {
+  productId: string;
   priceCents: number;
   currency: string;
   inStock: boolean;
@@ -376,6 +380,7 @@ function RecapPanel({
       </div>
 
       <ProductPurchase
+        productId={productId}
         inStock={inStock}
         isLowStock={isLowStock}
         availableQuantity={availableQuantity}
@@ -585,10 +590,12 @@ function RelatedCard({ item }: { item: ListingProduct }) {
     >
       <div className="relative aspect-square w-full bg-muted/20">
         {item.image ? (
-          <img
+          <Image
             src={item.image}
             alt={item.name}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
+            className="object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center p-4">

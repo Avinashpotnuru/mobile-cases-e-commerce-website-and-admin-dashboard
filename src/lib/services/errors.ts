@@ -33,3 +33,17 @@ export class UnauthorizedError extends AppError {
     this.name = "UnauthorizedError";
   }
 }
+
+export class PaymentNotConfiguredError extends AppError {
+  constructor(message = "Payment is not yet configured.") {
+    super(503, "PAYMENT_NOT_CONFIGURED", message);
+    this.name = "PaymentNotConfiguredError";
+  }
+}
+
+export class PaymentProviderError extends AppError {
+  constructor(status: number, code: string, message: string) {
+    super(status, code, message);
+    this.name = "PaymentProviderError";
+  }
+}

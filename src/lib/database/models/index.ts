@@ -19,6 +19,21 @@ import {
   type Inventory,
   type InventoryStatus,
 } from "./inventory.ts";
+import {
+  ORDER_COLLECTION,
+  type Order,
+  type OrderStatus,
+  type PaymentStatus,
+  type OrderItemSnapshot,
+  type OrderCustomerInfo,
+  type OrderShippingAddress,
+  type OrderDeliverySnapshot,
+} from "./order.ts";
+import {
+  PAYMENT_COLLECTION,
+  type PaymentRecord,
+  type PaymentRecordStatus,
+} from "./payment.ts";
 
 export async function ensureDatabaseIndexes(db: Db): Promise<void> {
   await db.collection(BRAND_COLLECTION).createIndexes([
@@ -42,6 +57,16 @@ export async function ensureDatabaseIndexes(db: Db): Promise<void> {
     { key: { productId: 1 }, unique: true },
     { key: { status: 1 } },
   ]);
+
+  await db.collection(ORDER_COLLECTION).createIndexes([
+    { key: { idempotencyKey: 1 }, unique: true },
+    { key: { status: 1, createdAt: -1 } },
+  ]);
+
+  await db.collection(PAYMENT_COLLECTION).createIndexes([
+    { key: { providerPaymentId: 1 }, unique: true },
+    { key: { orderId: 1 } },
+  ]);
 }
 
 export {
@@ -49,6 +74,8 @@ export {
   MOBILE_MODEL_COLLECTION,
   PRODUCT_COLLECTION,
   INVENTORY_COLLECTION,
+  ORDER_COLLECTION,
+  PAYMENT_COLLECTION,
 };
 export type {
   Brand,
@@ -59,4 +86,13 @@ export type {
   ProductStatus,
   Inventory,
   InventoryStatus,
+  Order,
+  OrderStatus,
+  PaymentStatus,
+  OrderItemSnapshot,
+  OrderCustomerInfo,
+  OrderShippingAddress,
+  OrderDeliverySnapshot,
+  PaymentRecord,
+  PaymentRecordStatus,
 };

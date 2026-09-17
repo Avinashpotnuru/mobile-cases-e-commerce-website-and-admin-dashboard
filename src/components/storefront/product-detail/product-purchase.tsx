@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 
 type ProductPurchaseProps = {
+  productId: string;
   inStock: boolean;
   isLowStock: boolean;
   availableQuantity: number;
@@ -12,6 +13,7 @@ type ProductPurchaseProps = {
 };
 
 export function ProductPurchase({
+  productId,
   inStock,
   isLowStock,
   availableQuantity,
@@ -20,6 +22,36 @@ export function ProductPurchase({
   const max = Math.max(1, availableQuantity);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAddToCart = async () => {
+    if (!inStock || adding) return;
+    setAdding(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, quantity }),
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        error?: { message?: string };
+      };
+      if (!response.ok || payload.ok === false) {
+        setError(
+          payload.error?.message ?? "Couldn't add this item to your cart.",
+        );
+        return;
+      }
+      setAdded(true);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -92,10 +124,9 @@ export function ProductPurchase({
         <Button
           type="button"
           size="lg"
+          loading={adding}
           disabled={!inStock}
-          onClick={() => {
-            if (inStock) setAdded(true);
-          }}
+          onClick={handleAddToCart}
           className={cn(
             "btn-sheen w-full",
             added && "bg-success text-success-foreground",
@@ -113,6 +144,15 @@ export function ProductPurchase({
           Buy Now
         </Button>
       </div>
+
+      {error ? (
+        <p
+          role="alert"
+          className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-medium text-destructive"
+        >
+          {error}
+        </p>
+      ) : null}
 
       {/* Screen reader announcement */}
       <p

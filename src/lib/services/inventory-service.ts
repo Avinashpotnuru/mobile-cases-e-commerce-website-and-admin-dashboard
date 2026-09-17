@@ -1,6 +1,7 @@
 import {
   MongoServerError,
   ObjectId,
+  type ClientSession,
   type Collection,
   type Filter,
 } from "mongodb";
@@ -321,6 +322,50 @@ export async function adjustStockQuantity(
     }
     throw new ValidationError({
       delta: "Insufficient stock to complete this adjustment.",
+    });
+  }
+  return result;
+}
+
+export async function consumeInventoryByProduct(
+  productId: string,
+  quantity: number,
+  session?: ClientSession,
+): Promise<Inventory> {
+  if (!ObjectId.isValid(productId)) {
+    throw new ValidationError({ productId: "Invalid product id." });
+  }
+  const objectId = new ObjectId(productId);
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    throw new ValidationError({
+      quantity: "quantity must be a positive integer.",
+    });
+  }
+
+  const inventories = await collection();
+  // Atomic decrement that only succeeds while enough stock remains, preventing
+  // overselling under concurrent orders.
+  const result = await inventories.findOneAndUpdate(
+    {
+      productId: objectId,
+      status: "active" as const,
+      quantity: { $gte: quantity },
+    },
+    { $inc: { quantity: -quantity }, $set: { updatedAt: new Date() } },
+    { returnDocument: "after", includeResultMetadata: false, session },
+  );
+  if (!result) {
+    const existing = await inventories.findOne({ productId: objectId }, { session });
+    if (!existing) {
+      throw new NotFoundError("Inventory");
+    }
+    if (existing.status !== "active") {
+      throw new ValidationError({
+        productId: "Inventory is not active for this product.",
+      });
+    }
+    throw new ValidationError({
+      productId: "Insufficient stock to complete this order.",
     });
   }
   return result;
