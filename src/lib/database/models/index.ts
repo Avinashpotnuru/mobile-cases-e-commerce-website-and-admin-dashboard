@@ -34,6 +34,10 @@ import {
   type PaymentRecord,
   type PaymentRecordStatus,
 } from "./payment.ts";
+import {
+  ADMIN_SESSIONS_COLLECTION,
+  type AdminSessionRecord,
+} from "./admin-session.ts";
 
 export async function ensureDatabaseIndexes(db: Db): Promise<void> {
   await db.collection(BRAND_COLLECTION).createIndexes([
@@ -67,6 +71,11 @@ export async function ensureDatabaseIndexes(db: Db): Promise<void> {
     { key: { providerPaymentId: 1 }, unique: true },
     { key: { orderId: 1 } },
   ]);
+
+  await db.collection(ADMIN_SESSIONS_COLLECTION).createIndexes([
+    { key: { tokenHash: 1 }, unique: true },
+    { key: { expiresAt: 1 } },
+  ]);
 }
 
 export {
@@ -76,6 +85,7 @@ export {
   INVENTORY_COLLECTION,
   ORDER_COLLECTION,
   PAYMENT_COLLECTION,
+  ADMIN_SESSIONS_COLLECTION,
 };
 export type {
   Brand,
@@ -95,4 +105,5 @@ export type {
   OrderDeliverySnapshot,
   PaymentRecord,
   PaymentRecordStatus,
+  AdminSessionRecord,
 };

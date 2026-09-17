@@ -1,5 +1,2 @@
-import { UnauthorizedError } from "@/lib/services/errors";
-
-export async function requireAdmin(): Promise<void> {
-  throw new UnauthorizedError();
-}
+export { requireAdmin } from "@/lib/auth/admin";
+export type { AdminSession } from "@/lib/auth/session";

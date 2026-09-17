@@ -47,6 +47,10 @@ function isEmpty(value: unknown): boolean {
   return value === undefined || value === null || value === "";
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 async function brandExists(brandId: ObjectId): Promise<boolean> {
   const db = await getDb();
   const count = await db
@@ -60,17 +64,27 @@ export type ListMobileModelsParams = {
   pageSize: number;
   brandId?: ObjectId;
   includeArchived?: boolean;
+  search?: string;
+  status?: MobileModelStatus;
 };
 
 export async function listMobileModels(
   params: ListMobileModelsParams,
 ): Promise<PaginatedResult<MobileModel>> {
   const { page, pageSize } = params;
-  const filter: Filter<MobileModel> = params.includeArchived
-    ? {}
-    : { status: "active" as const };
+  const filter: Filter<MobileModel> = {};
+  if (params.status) {
+    filter.status = params.status;
+  } else if (!params.includeArchived) {
+    filter.status = "active" as const;
+  }
   if (params.brandId) {
     filter.brandId = params.brandId;
+  }
+  const search = params.search?.trim();
+  if (search) {
+    const pattern = new RegExp(escapeRegExp(search), "i");
+    filter.$or = [{ name: pattern }, { slug: pattern }];
   }
   const models = await collection();
 
