@@ -11,7 +11,9 @@
     "db:seed": "node --env-file=.env.local scripts/seed.ts",
     "test:orders": "node --env-file=.env.local scripts/test-orders.mjs",
     "test:payments": "node --env-file=.env.local scripts/test-payments.mjs",
-    "test:confirmation": "node --env-file=.env.local scripts/test-confirmation.mjs"
+    "test:confirmation": "node --env-file=.env.local scripts/test-confirmation.mjs",
+    "test:admin": "node --env-file=.env.local scripts/test-admin.mjs",
+    "admin:hash": "node scripts/hash-password.mjs"
   },
   "dependencies": {
     "mongodb": "^7.6.0",

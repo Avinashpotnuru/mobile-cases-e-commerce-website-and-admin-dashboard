@@ -44,19 +44,33 @@ function isEmpty(value: unknown): boolean {
   return value === undefined || value === null || value === "";
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export type ListBrandsParams = {
   page: number;
   pageSize: number;
   includeArchived?: boolean;
+  search?: string;
+  status?: BrandStatus;
 };
 
 export async function listBrands(
   params: ListBrandsParams,
 ): Promise<PaginatedResult<Brand>> {
   const { page, pageSize } = params;
-  const filter: Filter<Brand> = params.includeArchived
-    ? {}
-    : { status: "active" as const };
+  const filter: Filter<Brand> = {};
+  if (params.status) {
+    filter.status = params.status;
+  } else if (!params.includeArchived) {
+    filter.status = "active" as const;
+  }
+  const search = params.search?.trim();
+  if (search) {
+    const pattern = new RegExp(escapeRegExp(search), "i");
+    filter.$or = [{ name: pattern }, { slug: pattern }];
+  }
   const brands = await collection();
 
   const [total, items] = await Promise.all([
