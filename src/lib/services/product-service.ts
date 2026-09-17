@@ -33,6 +33,7 @@ type ProductFields = Pick<
   | "description"
   | "images"
   | "compatibleModelIds"
+  | "priceCents"
   | "status"
 >;
 
@@ -77,6 +78,18 @@ function validateImages(value: unknown): string | null {
     }
   }
   return null;
+}
+
+function parsePriceCents(value: unknown): number | null {
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    !Number.isSafeInteger(value)
+  ) {
+    return null;
+  }
+  return value;
 }
 
 function parseModelIds(value: unknown): {
@@ -150,11 +163,11 @@ export async function listProducts(
 ): Promise<PaginatedResult<Product>> {
   const { page, pageSize } = params;
 
-  const filter: Filter<Product> = { status: "active" as const };
-  if (params.includeArchived) {
-    delete filter.status;
-  } else if (params.status) {
+  const filter: Filter<Product> = {};
+  if (params.status) {
     filter.status = params.status;
+  } else if (!params.includeArchived) {
+    filter.status = "active" as const;
   }
   if (params.q) {
     filter.name = { $regex: escapeRegex(params.q), $options: "i" };
@@ -272,6 +285,15 @@ export async function createProduct(
   ]);
   fieldErrors.push(["images", validateImages(body.images)]);
 
+  fieldErrors.push([
+    "priceCents",
+    isEmpty(body.priceCents)
+      ? null
+      : parsePriceCents(body.priceCents) === null
+        ? `priceCents must be a non-negative integer.`
+        : null,
+  ]);
+
   const modelIdsResult = parseModelIds(body.compatibleModelIds);
   fieldErrors.push(["compatibleModelIds", modelIdsResult.error]);
 
@@ -326,7 +348,7 @@ export async function createProduct(
     images: Array.isArray(body.images)
       ? body.images.map((url) => String(url).trim())
       : [],
-    priceCents: 0,
+    priceCents: parsePriceCents(body.priceCents) ?? 0,
     currency: DEFAULT_CURRENCY,
     compatibleModelIds,
     status,
@@ -393,6 +415,17 @@ export async function updateProduct(
     fieldErrors.push(["images", message]);
     if (message === null && Array.isArray(body.images)) {
       set.images = body.images.map((url) => String(url).trim());
+    }
+  }
+  if ("priceCents" in body) {
+    const cents = parsePriceCents(body.priceCents);
+    if (cents === null) {
+      fieldErrors.push([
+        "priceCents",
+        "priceCents must be a non-negative integer.",
+      ]);
+    } else {
+      set.priceCents = cents;
     }
   }
   if ("compatibleModelIds" in body) {
