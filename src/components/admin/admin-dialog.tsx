@@ -2,17 +2,20 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { cn } from "@/components/ui/cn";
 
 export function AdminDialog({
   open,
   onClose,
   title,
   children,
+  maxWidthClass = "sm:max-w-lg",
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  maxWidthClass?: string;
 }) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -73,7 +76,10 @@ export function AdminDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative max-h-[92dvh] w-full overflow-y-auto rounded-t-md border border-border bg-card p-6 text-card-foreground shadow-xl sm:max-w-lg sm:rounded-md"
+        className={cn(
+          "relative max-h-[92dvh] w-full overflow-y-auto rounded-t-md border border-border bg-card p-6 text-card-foreground shadow-xl sm:rounded-md",
+          maxWidthClass,
+        )}
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id={titleId} className="font-display text-2xl font-semibold">

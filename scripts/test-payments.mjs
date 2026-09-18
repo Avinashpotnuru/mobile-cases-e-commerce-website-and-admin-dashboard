@@ -21,11 +21,13 @@ const payments = db.collection("payment_requests");
 
 const orderIds = [new ObjectId(), new ObjectId()];
 const TEST_KEY = `payment-dummy-${String(Date.now())}`;
+const accessCode = "a".repeat(32);
 const insertOrder = (_id) =>
   orders.insertOne({
     _id,
     orderNumber: `MC-TEST-${String(Date.now())}`,
     idempotencyKey: `${TEST_KEY}-${_id.toHexString()}`,
+    accessCode,
     status: "pending",
     paymentStatus: "unpaid",
     totalCents: 5499,
@@ -71,20 +73,24 @@ try {
   await insertOrder(orderA);
   await insertOrder(orderB);
 
-  // 1-3. Input validation.
+  // 1-4. Input validation + order ownership.
   let res = await post("/api/payments", {});
   check("missing orderId -> 400", res.status === 400);
   res = await post("/api/payments", { orderId: "nope" });
+  check("missing accessCode -> 400", res.status === 400);
+  res = await post("/api/payments", { orderId: "nope", accessCode });
   check("invalid orderId -> 400", res.status === 400);
-  res = await post("/api/payments", { orderId: new ObjectId().toHexString() });
+  res = await post("/api/payments", { orderId: new ObjectId().toHexString(), accessCode });
   check("unknown order -> 404", res.status === 404);
-
-  // Verify without a payment record -> 404.
-  res = await post("/api/payments/verify", { orderId: orderB.toHexString() });
+  res = await post("/api/payments", { orderId: orderA.toHexString(), accessCode: "wrong" });
+  check("too-short accessCode -> 400", res.status === 400);
+  res = await post("/api/payments", { orderId: orderA.toHexString(), accessCode: "b".repeat(32) });
+  check("wrong accessCode -> 404", res.status === 404);
+  res = await post("/api/payments/verify", { orderId: orderB.toHexString(), accessCode });
   check("verify without record -> 404", res.status === 404);
 
-  // 4. Initiate -> pending, client-safe only, amount from DB.
-  res = await post("/api/payments", { orderId: orderA.toHexString() });
+  // 5. Initiate -> pending, client-safe only, amount from DB.
+  res = await post("/api/payments", { orderId: orderA.toHexString(), accessCode });
   const initiate = await res.json();
   check("initiate -> 200", res.status === 200);
   check(
@@ -108,8 +114,8 @@ try {
     record?.providerPaymentId === providerPaymentId && record?.status === "pending",
   );
 
-  // 5. Server-side verify -> payment succeeded, order marked paid.
-  res = await post("/api/payments/verify", { orderId: orderA.toHexString() });
+  // 6. Server-side verify -> payment succeeded, order marked paid.
+  res = await post("/api/payments/verify", { orderId: orderA.toHexString(), accessCode });
   const verify = await res.json();
   check(
     "verify -> succeeded + order paid",
@@ -119,19 +125,23 @@ try {
   check("order paymentStatus -> paid", paidOrder.paymentStatus === "paid");
   check("order status unchanged (separate lives)", paidOrder.status === "pending");
 
-  // 6. Idempotent re-verification -> no double update.
-  res = await post("/api/payments/verify", { orderId: orderA.toHexString() });
+  // 7. Idempotent re-verification -> no double update.
+  res = await post("/api/payments/verify", { orderId: orderA.toHexString(), accessCode });
   const verifyAgain = await res.json();
   check(
     "re-verify idempotent (no further order update)",
     verifyAgain.data.orderPaid === false,
   );
 
-  // 7. Webhook with bad signature -> 400.
+  // 8. A paid order cannot be re-initiated (record-level guard).
+  res = await post("/api/payments", { orderId: orderA.toHexString(), accessCode });
+  check("re-initiate paid order -> 409", res.status === 409);
+
+  // 9. Webhook with bad signature -> 400.
   res = await postWebhook({ providerPaymentId, status: "succeeded" }, "sha256=deadbeef");
   check("invalid webhook signature -> 400", res.status === 400);
 
-  // 8. Valid webhook for a failed payment -> record failed, order stays unpaid.
+  // 10. Valid webhook for a failed payment -> record failed, order stays unpaid.
   const failedRecordId = new ObjectId();
   await payments.insertOne({
     _id: failedRecordId,

@@ -13,6 +13,6 @@ export async function POST(request: NextRequest) {
     const event = await processPaymentWebhook({ rawBody, signature });
     return ok({ received: event });
   } catch (error) {
-    return handleApiError(error);
+    return handleApiError(error, { method: request.method, url: request.url });
   }
 }

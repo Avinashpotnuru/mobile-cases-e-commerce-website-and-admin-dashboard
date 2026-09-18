@@ -8,9 +8,11 @@ import {
 import { getDb } from "@/lib/database";
 import {
   INVENTORY_COLLECTION,
+  MOBILE_MODEL_COLLECTION,
   PRODUCT_COLLECTION,
   type Inventory,
   type InventoryStatus,
+  type MobileModel,
   type Product,
 } from "@/lib/database/models";
 import { NotFoundError, ValidationError } from "@/lib/services/errors";
@@ -70,11 +72,11 @@ export async function listInventory(
   params: ListInventoryParams,
 ): Promise<PaginatedResult<Inventory>> {
   const { page, pageSize } = params;
-  const filter: Filter<Inventory> = { status: "active" as const };
-  if (params.includeArchived) {
-    delete filter.status;
-  } else if (params.status) {
+  const filter: Filter<Inventory> = {};
+  if (params.status) {
     filter.status = params.status;
+  } else if (!params.includeArchived) {
+    filter.status = "active";
   }
   if (params.productIds && params.productIds.length > 0) {
     filter.productId = { $in: params.productIds };
@@ -98,6 +100,118 @@ export async function listInventory(
     total,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
   };
+}
+
+export interface InventoryAdminRow {
+  _id: ObjectId;
+  productId: ObjectId;
+  productName: string;
+  productSlug: string;
+  modelNames: string[];
+  quantity: number;
+  lowStockThreshold: number;
+  status: InventoryStatus;
+  updatedAt: Date;
+}
+
+export type ListAdminInventoryParams = ListInventoryParams & {
+  q?: string;
+  productId?: ObjectId;
+  mobileModelId?: ObjectId;
+};
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export async function listAdminInventory(
+  params: ListAdminInventoryParams,
+): Promise<PaginatedResult<InventoryAdminRow>> {
+  const q = params.q?.trim();
+
+  let productIds: ObjectId[] | undefined;
+  if (q || params.mobileModelId) {
+    const db = await getDb();
+    const productQuery: Filter<Product> = {};
+    if (q) {
+      const pattern = new RegExp(escapeRegExp(q), "i");
+      productQuery.$or = [{ name: pattern }, { slug: pattern }];
+    }
+    if (params.mobileModelId) {
+      productQuery.compatibleModelIds = params.mobileModelId;
+    }
+    const matches = await db
+      .collection<Product>(PRODUCT_COLLECTION)
+      .find(productQuery, { projection: { _id: 1 } })
+      .limit(1000)
+      .toArray();
+    productIds = matches.map((product) => product._id);
+    if (productIds.length === 0) {
+      return { items: [], page: params.page, pageSize: params.pageSize, total: 0, totalPages: 1 };
+    }
+  }
+
+  if (params.productId) {
+    productIds = productIds
+      ? productIds.filter((id) => id.equals(params.productId as ObjectId))
+      : [params.productId];
+    if (productIds.length === 0) {
+      return { items: [], page: params.page, pageSize: params.pageSize, total: 0, totalPages: 1 };
+    }
+  }
+
+  const result = await listInventory({
+    page: params.page,
+    pageSize: params.pageSize,
+    status: params.status,
+    includeArchived: params.includeArchived,
+    productIds,
+  });
+
+  if (result.items.length === 0) {
+    return { ...result, items: [] as InventoryAdminRow[] };
+  }
+
+  const db = await getDb();
+  const productIdsToLoad = result.items.map((item) => item.productId);
+  const products = await db
+    .collection<Product>(PRODUCT_COLLECTION)
+    .find({ _id: { $in: productIdsToLoad } })
+    .toArray();
+  const productById = new Map(
+    products.map((product) => [product._id.toHexString(), product]),
+  );
+
+  const allModelIds = products.flatMap((product) => product.compatibleModelIds);
+  const modelNames = new Map<string, string>();
+  if (allModelIds.length > 0) {
+    const models = await db
+      .collection<MobileModel>(MOBILE_MODEL_COLLECTION)
+      .find({ _id: { $in: allModelIds } })
+      .toArray();
+    for (const model of models) {
+      modelNames.set(model._id.toHexString(), model.name);
+    }
+  }
+
+  const items = result.items.map((item) => {
+    const product = productById.get(item.productId.toHexString());
+    return {
+      _id: item._id,
+      productId: item.productId,
+      productName: product?.name ?? "Unknown product",
+      productSlug: product?.slug ?? "",
+      modelNames: (product?.compatibleModelIds ?? [])
+        .map((id) => modelNames.get(id.toHexString()))
+        .filter((name): name is string => Boolean(name)),
+      quantity: item.quantity,
+      lowStockThreshold: item.lowStockThreshold,
+      status: item.status,
+      updatedAt: item.updatedAt,
+    };
+  });
+
+  return { ...result, items };
 }
 
 export async function createInventory(
