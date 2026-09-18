@@ -28,6 +28,6 @@ export async function POST(request: NextRequest) {
     });
     return response;
   } catch (error) {
-    return handleApiError(error);
+    return handleApiError(error, { method: request.method, url: request.url });
   }
 }

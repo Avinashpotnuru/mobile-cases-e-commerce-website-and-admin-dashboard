@@ -21,6 +21,8 @@ import {
 } from "./inventory.ts";
 import {
   ORDER_COLLECTION,
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
   type Order,
   type OrderStatus,
   type PaymentStatus,
@@ -59,12 +61,13 @@ export async function ensureDatabaseIndexes(db: Db): Promise<void> {
 
   await db.collection(INVENTORY_COLLECTION).createIndexes([
     { key: { productId: 1 }, unique: true },
-    { key: { status: 1 } },
+    { key: { status: 1, createdAt: -1 } },
   ]);
 
   await db.collection(ORDER_COLLECTION).createIndexes([
     { key: { idempotencyKey: 1 }, unique: true },
     { key: { status: 1, createdAt: -1 } },
+    { key: { createdAt: -1 } },
   ]);
 
   await db.collection(PAYMENT_COLLECTION).createIndexes([
@@ -84,6 +87,8 @@ export {
   PRODUCT_COLLECTION,
   INVENTORY_COLLECTION,
   ORDER_COLLECTION,
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
   PAYMENT_COLLECTION,
   ADMIN_SESSIONS_COLLECTION,
 };

@@ -34,6 +34,6 @@ export async function POST(request: NextRequest) {
     const costs = computeCheckoutCosts(cart);
     return ok({ cart, costs });
   } catch (error) {
-    return handleApiError(error);
+    return handleApiError(error, { method: request.method, url: request.url });
   }
 }

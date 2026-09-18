@@ -8,6 +8,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/services/errors";
+import { logError, logWarn, type LogContext } from "@/lib/server/log";
 
 export function ok<TData>(
   data: TData,
@@ -69,7 +70,10 @@ export function serverErrorResponse(
   );
 }
 
-export function handleApiError(error: unknown): NextResponse<ApiResponse<never>> {
+export function handleApiError(
+  error: unknown,
+  context: LogContext = {},
+): NextResponse<ApiResponse<never>> {
   if (error instanceof ValidationError) {
     return validationErrorResponse(error.fieldErrors);
   }
@@ -77,12 +81,26 @@ export function handleApiError(error: unknown): NextResponse<ApiResponse<never>>
     return notFoundResponse(error.message);
   }
   if (error instanceof AppError) {
+    // Expected application failures are safe to show, but 5xx-grade ones
+    // (e.g. payment provider trouble) are worth surfacing server-side.
+    if (error.status >= 500) {
+      logWarn(`${error.name} returned to client`, {
+        ...context,
+        code: error.code,
+        message: error.message,
+      });
+    }
     return errorResponse(
       { code: error.code, message: error.message },
       { status: error.status },
     );
   }
 
-  console.error("Unhandled API error:", error);
+  logError("Unhandled API error", {
+    ...context,
+    errorName: error instanceof Error ? error.name : typeof error,
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+  });
   return serverErrorResponse();
 }

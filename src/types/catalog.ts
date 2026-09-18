@@ -43,6 +43,18 @@ export interface StockRow {
   updatedAt: string;
 }
 
+export interface InventoryAdminRow {
+  _id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  modelNames: string[];
+  quantity: number;
+  lowStockThreshold: number;
+  status: CatalogStatus;
+  updatedAt: string;
+}
+
 export interface ProductFormValues {
   name: string;
   slug: string;

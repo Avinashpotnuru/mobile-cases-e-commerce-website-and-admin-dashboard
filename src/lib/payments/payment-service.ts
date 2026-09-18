@@ -40,12 +40,17 @@ export type ClientSafePayment = {
 
 // Step 3-4 of the flow: initiate with the provider, persist the request and
 // return only client-safe fields. The amount always comes from the stored
-// order - never from the client.
+// order - never from the client. The order's access code proves the caller
+// owns the order before a payment can be initiated for it.
 export async function initiateOrderPayment(
   orderId: string,
+  accessCode: string,
 ): Promise<ClientSafePayment> {
   if (!ObjectId.isValid(orderId)) {
     throw new ValidationError({ orderId: "Invalid order id." });
+  }
+  if (typeof accessCode !== "string" || accessCode.trim().length < 16) {
+    throw new ValidationError({ accessCode: "Invalid order access code." });
   }
   const objectId = new ObjectId(orderId);
   const db = await getDb();
@@ -57,7 +62,10 @@ export async function initiateOrderPayment(
     currency: string;
   }>(ORDER_COLLECTION);
 
-  const order = await orders.findOne({ _id: objectId });
+  const order = await orders.findOne({
+    _id: objectId,
+    accessCode: accessCode.trim(),
+  });
   if (!order) {
     throw new NotFoundError("Order");
   }
@@ -76,6 +84,19 @@ export async function initiateOrderPayment(
     );
   }
 
+  const records = await paymentsCollection();
+  // Never overwrite a payment that has already been verified as succeeded;
+  // doing so would discard the provider linkage for an order that may only be
+  // a step away from being marked paid.
+  const existing = await records.findOne({ orderId: objectId });
+  if (existing?.status === "succeeded") {
+    throw new PaymentProviderError(
+      409,
+      "PAYMENT_ALREADY_COMPLETED",
+      "This order has already been paid.",
+    );
+  }
+
   const provider = getPaymentProvider();
   const initiation = await provider.initiate({
     orderId: objectId.toHexString(),
@@ -88,7 +109,6 @@ export async function initiateOrderPayment(
   const status: PaymentRecordStatus = isRecordStatus(initiation.status)
     ? initiation.status
     : "pending";
-  const records = await paymentsCollection();
   await records.updateOne(
     { orderId: objectId },
     {
@@ -121,14 +141,29 @@ export async function initiateOrderPayment(
 
 // Steps 5-6: re-verify with the provider server-side and only then update
 // payment/order status. Updates are idempotent - re-verification of a
-// succeeded payment never changes anything.
+// succeeded payment never changes anything. When called from a client route
+// an access code must prove ownership; the signed webhook path omits it.
 export async function verifyOrderPayment(
   orderId: string,
+  accessCode?: string,
 ): Promise<{ paymentStatus: PaymentRecordStatus; orderPaid: boolean }> {
   if (!ObjectId.isValid(orderId)) {
     throw new ValidationError({ orderId: "Invalid order id." });
   }
   const objectId = new ObjectId(orderId);
+  if (accessCode !== undefined) {
+    if (typeof accessCode !== "string" || accessCode.trim().length < 16) {
+      throw new ValidationError({ accessCode: "Invalid order access code." });
+    }
+    const db = await getDb();
+    const order = await db
+      .collection<{ _id: ObjectId }>(ORDER_COLLECTION)
+      .findOne({ _id: objectId, accessCode: accessCode.trim() });
+    if (!order) {
+      throw new NotFoundError("Order");
+    }
+  }
+
   const records = await paymentsCollection();
   const record = await records.findOne({ orderId: objectId });
   if (!record) {
