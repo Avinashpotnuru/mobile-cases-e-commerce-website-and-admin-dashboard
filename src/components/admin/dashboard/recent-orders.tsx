@@ -1,13 +1,22 @@
-import Link from "next/link";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
-import { formatPrice } from "@/components/storefront/home/price";
-import { BagIcon } from "./kpi-icons";
+import { DataTable } from "@/components/admin/data-table";
+import { formatCents } from "./charts";
+import { BagIcon } from "@/components/admin/admin-icons";
 import type {
   DashboardOrderSummary,
   RecentOrder,
 } from "@/lib/services/dashboard-service";
+
+type RecentOrderRow = Omit<RecentOrder, "_id"> & { _id: string };
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -16,7 +25,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 });
 
-function orderCount(order: RecentOrder): number {
+function orderCount(order: RecentOrderRow): number {
   return order.items.reduce((total, item) => total + item.quantity, 0);
 }
 
@@ -43,88 +52,120 @@ function paymentBadge(paymentStatus: RecentOrder["paymentStatus"]) {
   return <Badge variant="outline">Unpaid</Badge>;
 }
 
+const columns: ColumnDef<RecentOrderRow, unknown>[] = [
+  {
+    accessorKey: "orderNumber",
+    enableSorting: true,
+    header: "Order",
+    cell: (info) => (
+      <span className="font-mono text-xs font-semibold">
+        {info.getValue<string>()}
+      </span>
+    ),
+  },
+  {
+    accessorFn: (order) =>
+      `${order.customer.firstName} ${order.customer.lastName}`,
+    enableSorting: true,
+    header: "Customer",
+    cell: ({ row }) => (
+      <div className="min-w-0">
+        <p className="font-medium text-foreground">
+          {row.original.customer.firstName} {row.original.customer.lastName}
+        </p>
+        <p className="text-xs text-muted-foreground">{row.original.customer.email}</p>
+      </div>
+    ),
+  },
+  {
+    accessorFn: (order) => orderCount(order),
+    enableSorting: true,
+    meta: { align: "right" },
+    header: "Items",
+    cell: (info) => (
+      <span className="tabular-nums text-muted-foreground">
+        {info.getValue<number>()}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "totalCents",
+    enableSorting: true,
+    meta: { align: "right" },
+    header: "Total",
+    cell: ({ row }) => (
+      <span className="font-semibold tabular-nums">
+        {formatCents(row.original.totalCents, row.original.currency)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "paymentStatus",
+    header: "Payment",
+    cell: ({ row }) => paymentBadge(row.original.paymentStatus),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => statusBadge(row.original.status),
+  },
+  {
+    accessorFn: (order) => order.createdAt.getTime(),
+    enableSorting: true,
+    meta: { align: "right" },
+    header: "Placed",
+    cell: ({ row }) => (
+      <span className="tabular-nums text-muted-foreground">
+        {dateFormatter.format(row.original.createdAt)}
+      </span>
+    ),
+  },
+];
+
 export function RecentOrders({ orders }: { orders: DashboardOrderSummary }) {
+  const rows: RecentOrderRow[] = orders.recent.map((order) => ({
+    ...order,
+    _id: order._id.toString(),
+  }));
+
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-3 pb-4">
-        <div className="flex items-center gap-3">
-          <CardTitle>Recent orders</CardTitle>
+        <div className="flex items-center gap-2.5">
           <BagIcon className="h-5 w-5 text-muted-foreground" />
+          <CardTitle>Recent orders</CardTitle>
         </div>
-        <Link
+        <a
           href="/admin/orders"
           className="text-sm font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           View all
-        </Link>
+        </a>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 pt-0">
         {orders.total === 0 ? (
-          <EmptyState
-            title="No orders yet"
-            description="When customers place orders they will appear here, newest first, including payment and fulfilment status."
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Order
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Customer
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Items
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Total
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Payment
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Status
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Placed
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.recent.map((order) => (
-                  <tr
-                    key={order._id.toString()}
-                    className="border-b border-border last:border-0"
-                  >
-                    <td className="px-3 py-3 font-medium tabular-nums">
-                      {order.orderNumber}
-                    </td>
-                    <td className="px-3 py-3 text-muted-foreground">
-                      {order.customer.firstName} {order.customer.lastName}
-                    </td>
-                    <td className="px-3 py-3 tabular-nums text-muted-foreground">
-                      {orderCount(order)}
-                    </td>
-                    <td className="px-3 py-3 font-medium tabular-nums">
-                      {formatPrice({
-                        priceCents: order.totalCents,
-                        currency: order.currency,
-                      })}
-                    </td>
-                    <td className="px-3 py-3">{paymentBadge(order.paymentStatus)}</td>
-                    <td className="px-3 py-3">{statusBadge(order.status)}</td>
-                    <td className="px-3 py-3 tabular-nums text-muted-foreground">
-                      {dateFormatter.format(order.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="p-6">
+            <EmptyState
+              title="No orders yet"
+              description="When customers place orders they will appear here, newest first, including payment and fulfilment status."
+            />
           </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={rows}
+            getRowId={(order) => order._id}
+            minWidth={720}
+          />
         )}
       </CardContent>
+      {orders.total > 0 ? (
+        <CardFooter className="border-t border-border px-3 py-2.5">
+          <p className="text-xs text-muted-foreground">
+            Showing the {Math.min(orders.recent.length, 6)} most recent orders.
+          </p>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }

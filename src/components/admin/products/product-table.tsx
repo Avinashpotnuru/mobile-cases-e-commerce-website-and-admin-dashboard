@@ -1,7 +1,9 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/admin/data-table";
 import { EmptyState } from "@/components/ui/states";
 import { ProductStatusBadge } from "@/components/admin/status-badge";
 import {
@@ -35,6 +37,153 @@ function availabilityOf(stock: StockRow | undefined): {
   return { label: `In stock · ${stock.quantity}`, tone: "success" };
 }
 
+function columns({
+  brands,
+  models,
+  stockMap,
+  onEdit,
+  onArchive,
+}: {
+  brands: BrandRow[];
+  models: MobileModelRow[];
+  stockMap: Record<string, StockRow>;
+  onEdit: (product: ProductRow) => void;
+  onArchive: (product: ProductRow) => void;
+}): ColumnDef<ProductRow, unknown>[] {
+  return [
+    {
+      accessorKey: "name",
+      enableSorting: true,
+      header: "Product",
+      cell: ({ row }) => {
+        const product = row.original;
+        const thumbnail = product.images[0];
+        return (
+          <div className="flex items-center gap-3">
+            <span className="h-10 w-10 shrink-0 overflow-hidden rounded-sm border border-border bg-muted">
+              {thumbnail ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={thumbnail}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : null}
+            </span>
+            <div className="min-w-0">
+              <p className="max-w-[220px] truncate font-medium">
+                {product.name}
+              </p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {product.slug}
+              </p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorFn: (product) =>
+        brandNamesOfProduct(product, models, brands).join(", "),
+      enableSorting: true,
+      header: "Brand",
+      cell: ({ row }) => (
+        <p className="max-w-[160px] truncate text-muted-foreground">
+          {brandNamesOfProduct(row.original, models, brands).join(", ") ||
+            "\u2014"}
+        </p>
+      ),
+    },
+    {
+      accessorFn: (product) => compatibleModelNamesOf(product, models).join(", "),
+      header: "Compatible models",
+      cell: ({ row }) => {
+        const names = compatibleModelNamesOf(row.original, models);
+        return (
+          <p className="max-w-[200px] truncate text-muted-foreground">
+            {names.length
+              ? `${names.slice(0, 2).join(", ")}${
+                  names.length > 2 ? ` +${names.length - 2}` : ""
+                }`
+              : "\u2014"}
+          </p>
+        );
+      },
+    },
+    {
+      accessorKey: "priceCents",
+      enableSorting: true,
+      meta: { align: "right" },
+      header: "Price",
+      cell: ({ row }) => (
+        <span className="font-medium tabular-nums">
+          {formatPrice(row.original.priceCents, row.original.currency)}
+        </span>
+      ),
+    },
+    {
+      accessorFn: (product) => availabilityOf(stockMap[product._id]).label,
+      header: "Availability",
+      cell: ({ row }) => {
+        const availability = availabilityOf(stockMap[row.original._id]);
+        return availability.tone === "low" ? (
+          <Badge
+            variant="outline"
+            className="border-amber-300 bg-amber-50 text-amber-800"
+          >
+            {availability.label}
+          </Badge>
+        ) : (
+          <Badge variant={availability.tone}>{availability.label}</Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      enableSorting: true,
+      header: "Status",
+      cell: ({ row }) => <ProductStatusBadge status={row.original.status} />,
+    },
+    {
+      accessorFn: (product) => new Date(product.updatedAt).getTime(),
+      enableSorting: true,
+      meta: { align: "right" },
+      header: "Updated",
+      cell: ({ row }) => (
+        <span className="tabular-nums text-muted-foreground">
+          {dateFormatter.format(new Date(row.original.updatedAt))}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      enableSorting: false,
+      meta: { align: "right" },
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(row.original)}
+          >
+            Edit
+          </Button>
+          {row.original.status !== "archived" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onArchive(row.original)}
+            >
+              Archive
+            </Button>
+          ) : null}
+        </div>
+      ),
+    },
+  ];
+}
+
 export function ProductTable({
   products,
   brands,
@@ -60,141 +209,13 @@ export function ProductTable({
   }
 
   return (
-    <div className="rounded-md border border-border bg-card shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[960px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-              <th scope="col" className="px-4 py-3 font-medium">
-                Product
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Brand
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Compatible models
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Price
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Availability
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Status
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Updated
-              </th>
-              <th scope="col" className="px-4 py-3 text-right font-medium">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => {
-              const brandsOfProduct = brandNamesOfProduct(
-                product,
-                models,
-                brands,
-              );
-              const compatNames = compatibleModelNamesOf(product, models);
-              const availability = availabilityOf(stockMap[product._id]);
-              const thumbnail = product.images[0];
-              return (
-                <tr
-                  key={product._id}
-                  className="border-b border-border last:border-0"
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <span className="h-10 w-10 shrink-0 overflow-hidden rounded-sm border border-border bg-muted">
-                        {thumbnail ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={thumbnail}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="max-w-[220px] truncate font-medium">
-                          {product.name}
-                        </p>
-                        <p className="font-mono text-xs text-muted-foreground">
-                          {product.slug}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="max-w-[160px] truncate text-muted-foreground">
-                      {brandsOfProduct.length
-                        ? brandsOfProduct.join(", ")
-                        : "\u2014"}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="max-w-[200px] truncate text-muted-foreground">
-                      {compatNames.length
-                        ? `${compatNames.slice(0, 2).join(", ")}${
-                            compatNames.length > 2
-                              ? ` +${compatNames.length - 2}`
-                              : ""
-                          }`
-                        : "\u2014"}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3 font-medium tabular-nums">
-                    {formatPrice(product.priceCents, product.currency)}
-                  </td>
-                  <td className="px-4 py-3">
-                    {availability.tone === "low" ? (
-                      <Badge
-                        variant="outline"
-                        className="border-amber-300 bg-amber-50 text-amber-800"
-                      >
-                        {availability.label}
-                      </Badge>
-                    ) : (
-                      <Badge variant={availability.tone}>
-                        {availability.label}
-                      </Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <ProductStatusBadge status={product.status} />
-                  </td>
-                  <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                    {dateFormatter.format(new Date(product.updatedAt))}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(product)}
-                      >
-                        Edit
-                      </Button>
-                      {product.status !== "archived" ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onArchive(product)}
-                        >
-                          Archive
-                        </Button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <DataTable
+        columns={columns({ brands, models, stockMap, onEdit, onArchive })}
+        data={products}
+        getRowId={(product) => product._id}
+        minWidth={960}
+      />
     </div>
   );
 }

@@ -42,7 +42,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         </div>
 
         <div
-          className="mt-4 grid grid-cols-5 gap-3"
+          className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5"
           role="group"
           aria-label="Product views from different angles"
         >
@@ -99,7 +99,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
 
       {hasMultiple ? (
         <div
-          className="grid grid-cols-5 gap-3"
+          className="grid grid-cols-3 gap-3 sm:grid-cols-5"
           role="group"
           aria-label="Product images"
         >

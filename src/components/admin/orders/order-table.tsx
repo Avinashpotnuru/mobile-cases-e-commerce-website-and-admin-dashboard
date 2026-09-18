@@ -1,6 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/admin/data-table";
 import { EmptyState } from "@/components/ui/states";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/admin/status-badge";
 import { formatPrice } from "@/components/admin/catalog-utils";
@@ -14,6 +16,103 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 
 function itemCount(order: OrderListItem): number {
   return order.items.reduce((total, item) => total + item.quantity, 0);
+}
+
+function columns({
+  onView,
+}: {
+  onView: (order: OrderListItem) => void;
+}): ColumnDef<OrderListItem, unknown>[] {
+  return [
+    {
+      accessorKey: "orderNumber",
+      enableSorting: true,
+      header: "Order",
+      cell: (info) => (
+        <span className="font-mono text-xs font-semibold">
+          {info.getValue<string>()}
+        </span>
+      ),
+    },
+    {
+      accessorFn: (order) =>
+        `${order.customer.firstName} ${order.customer.lastName}`,
+      enableSorting: true,
+      header: "Customer",
+      cell: ({ row }) => (
+        <div className="min-w-0">
+          <p className="max-w-[220px] truncate">
+            {row.original.customer.firstName} {row.original.customer.lastName}
+          </p>
+          <p className="max-w-[220px] truncate font-mono text-xs text-muted-foreground">
+            {row.original.customer.email}
+          </p>
+        </div>
+      ),
+    },
+    {
+      accessorFn: (order) => itemCount(order),
+      enableSorting: true,
+      meta: { align: "right" },
+      header: "Items",
+      cell: (info) => (
+        <span className="tabular-nums text-muted-foreground">
+          {info.getValue<number>()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "totalCents",
+      enableSorting: true,
+      meta: { align: "right" },
+      header: "Total",
+      cell: ({ row }) => (
+        <span className="font-medium tabular-nums">
+          {formatPrice(row.original.totalCents, row.original.currency)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "paymentStatus",
+      header: "Payment",
+      cell: ({ row }) => (
+        <PaymentStatusBadge status={row.original.paymentStatus} />
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => <OrderStatusBadge status={row.original.status} />,
+    },
+    {
+      accessorFn: (order) => new Date(order.createdAt).getTime(),
+      enableSorting: true,
+      meta: { align: "right" },
+      header: "Placed",
+      cell: ({ row }) => (
+        <span className="tabular-nums text-muted-foreground">
+          {dateFormatter.format(new Date(row.original.createdAt))}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      enableSorting: false,
+      meta: { align: "right" },
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onView(row.original)}
+          >
+            View
+          </Button>
+        </div>
+      ),
+    },
+  ];
 }
 
 export function OrderTable({
@@ -33,87 +132,13 @@ export function OrderTable({
   }
 
   return (
-    <div className="rounded-md border border-border bg-card shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1080px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-              <th scope="col" className="px-4 py-3 font-medium">
-                Order
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Customer
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Items
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Total
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Payment
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Status
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Placed
-              </th>
-              <th scope="col" className="px-4 py-3 text-right font-medium">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr
-                key={order._id}
-                className="border-b border-border last:border-0"
-              >
-                <td className="px-4 py-3">
-                  <p className="font-mono text-xs font-semibold">
-                    {order.orderNumber}
-                  </p>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="max-w-[220px] truncate">
-                    {order.customer.firstName} {order.customer.lastName}
-                  </p>
-                  <p className="max-w-[220px] truncate font-mono text-xs text-muted-foreground">
-                    {order.customer.email}
-                  </p>
-                </td>
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {itemCount(order)}
-                </td>
-                <td className="px-4 py-3 font-medium tabular-nums">
-                  {formatPrice(order.totalCents, order.currency)}
-                </td>
-                <td className="px-4 py-3">
-                  <PaymentStatusBadge status={order.paymentStatus} />
-                </td>
-                <td className="px-4 py-3">
-                  <OrderStatusBadge status={order.status} />
-                </td>
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {dateFormatter.format(new Date(order.createdAt))}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onView(order)}
-                    >
-                      View
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <DataTable
+        columns={columns({ onView })}
+        data={orders}
+        getRowId={(order) => order._id}
+        minWidth={1080}
+      />
     </div>
   );
 }

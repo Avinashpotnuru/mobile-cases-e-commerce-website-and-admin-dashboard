@@ -7,7 +7,6 @@ export default function AdminLayout({
 }) {
   return (
     <AdminShell
-      title="Admin"
       items={[
         { label: "Dashboard", href: "/admin/dashboard" },
         { label: "Brands", href: "/admin/brands" },
