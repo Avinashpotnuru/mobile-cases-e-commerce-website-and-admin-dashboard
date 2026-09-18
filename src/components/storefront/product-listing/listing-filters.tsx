@@ -67,7 +67,7 @@ export function ListingFilters({
         method="get"
       >
         <span className={captionClasses}>Price range</span>
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           {preserveParams(base).map((field) => (
             <input
               key={field.name}
@@ -82,7 +82,7 @@ export function ListingFilters({
             </span>
             <Input
               aria-label="Minimum price in dollars"
-              className="w-28 pl-7"
+              className="w-20 pl-7 sm:w-28"
               defaultValue={minPrice ?? ""}
               max={MAX_PRICE_DOLLARS}
               min={0}
@@ -100,7 +100,7 @@ export function ListingFilters({
             </span>
             <Input
               aria-label="Maximum price in dollars"
-              className="w-28 pl-7"
+              className="w-20 pl-7 sm:w-28"
               defaultValue={maxPrice ?? ""}
               max={MAX_PRICE_DOLLARS}
               min={0}

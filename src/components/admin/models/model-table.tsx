@@ -1,7 +1,9 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { ActiveStatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/admin/data-table";
 import { EmptyState } from "@/components/ui/states";
 import type { MobileModelRow } from "@/types/catalog";
 
@@ -10,6 +12,92 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   year: "numeric",
 });
+
+function columns({
+  brandNames,
+  onEdit,
+  onDeactivate,
+}: {
+  brandNames: Record<string, string>;
+  onEdit: (model: MobileModelRow) => void;
+  onDeactivate: (model: MobileModelRow) => void;
+}): ColumnDef<MobileModelRow, unknown>[] {
+  return [
+    {
+      accessorKey: "name",
+      enableSorting: true,
+      header: "Model",
+      cell: (info) => (
+        <span className="font-medium">{info.getValue<string>()}</span>
+      ),
+    },
+    {
+      accessorFn: (model) => brandNames[model.brandId] ?? "",
+      enableSorting: true,
+      header: "Brand",
+      cell: (info) => (
+        <span className="text-muted-foreground">
+          {info.getValue<string>() || "\u2014"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "slug",
+      header: "Slug",
+      cell: (info) => (
+        <span className="font-mono text-xs text-muted-foreground">
+          {info.getValue<string>()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: (info) => (
+        <ActiveStatusBadge
+          active={info.getValue<MobileModelRow["status"]>() === "active"}
+        />
+      ),
+    },
+    {
+      accessorFn: (model) => new Date(model.updatedAt).getTime(),
+      enableSorting: true,
+      meta: { align: "right" },
+      header: "Updated",
+      cell: (info) => (
+        <span className="tabular-nums text-muted-foreground">
+          {dateFormatter.format(new Date(info.getValue<number>()))}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      enableSorting: false,
+      meta: { align: "right" },
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(row.original)}
+          >
+            Edit
+          </Button>
+          {row.original.status === "active" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDeactivate(row.original)}
+            >
+              Archive
+            </Button>
+          ) : null}
+        </div>
+      ),
+    },
+  ];
+}
 
 export function MobileModelTable({
   models,
@@ -32,75 +120,13 @@ export function MobileModelTable({
   }
 
   return (
-    <div className="rounded-md border border-border bg-card shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-              <th scope="col" className="px-4 py-3 font-medium">
-                Model
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Brand
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Slug
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Status
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Updated
-              </th>
-              <th scope="col" className="px-4 py-3 text-right font-medium">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {models.map((model) => (
-              <tr
-                key={model._id}
-                className="border-b border-border last:border-0"
-              >
-                <td className="px-4 py-3 font-medium">{model.name}</td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {brandNames[model.brandId] ?? "\u2014"}
-                </td>
-                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                  {model.slug}
-                </td>
-                <td className="px-4 py-3">
-                  <ActiveStatusBadge active={model.status === "active"} />
-                </td>
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {dateFormatter.format(new Date(model.updatedAt))}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(model)}
-                    >
-                      Edit
-                    </Button>
-                    {model.status === "active" ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDeactivate(model)}
-                      >
-                        Archive
-                      </Button>
-                    ) : null}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <DataTable
+        columns={columns({ brandNames, onEdit, onDeactivate })}
+        data={models}
+        getRowId={(model) => model._id}
+        minWidth={760}
+      />
     </div>
   );
 }

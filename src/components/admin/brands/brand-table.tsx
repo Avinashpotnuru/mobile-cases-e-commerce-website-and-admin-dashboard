@@ -1,7 +1,9 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { ActiveStatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/admin/data-table";
 import { EmptyState } from "@/components/ui/states";
 import type { BrandRow } from "@/types/catalog";
 
@@ -10,6 +12,90 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   year: "numeric",
 });
+
+function columns({
+  onEdit,
+  onDeactivate,
+}: {
+  onEdit: (brand: BrandRow) => void;
+  onDeactivate: (brand: BrandRow) => void;
+}): ColumnDef<BrandRow, unknown>[] {
+  return [
+    {
+      accessorKey: "name",
+      enableSorting: true,
+      header: "Brand",
+      cell: (info) => (
+        <span className="font-medium">{info.getValue<string>()}</span>
+      ),
+    },
+    {
+      accessorKey: "slug",
+      header: "Slug",
+      cell: (info) => (
+        <span className="font-mono text-xs text-muted-foreground">
+          {info.getValue<string>()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+      cell: (info) => {
+        const value = info.getValue<string>();
+        return (
+          <p className="max-w-xs truncate text-muted-foreground">
+            {value || "\u2014"}
+          </p>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: (info) => (
+        <ActiveStatusBadge active={info.getValue<BrandRow["status"]>() === "active"} />
+      ),
+    },
+    {
+      accessorFn: (brand) => new Date(brand.updatedAt).getTime(),
+      enableSorting: true,
+      meta: { align: "right" },
+      header: "Updated",
+      cell: (info) => (
+        <span className="tabular-nums text-muted-foreground">
+          {dateFormatter.format(new Date(info.getValue<number>()))}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      enableSorting: false,
+      meta: { align: "right" },
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(row.original)}
+          >
+            Edit
+          </Button>
+          {row.original.status === "active" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDeactivate(row.original)}
+            >
+              Archive
+            </Button>
+          ) : null}
+        </div>
+      ),
+    },
+  ];
+}
 
 export function BrandTable({
   brands,
@@ -30,75 +116,13 @@ export function BrandTable({
   }
 
   return (
-    <div className="rounded-md border border-border bg-card shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-              <th scope="col" className="px-4 py-3 font-medium">
-                Brand
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Slug
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Description
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Status
-              </th>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Updated
-              </th>
-              <th scope="col" className="px-4 py-3 text-right font-medium">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {brands.map((brand) => (
-              <tr
-                key={brand._id}
-                className="border-b border-border last:border-0"
-              >
-                <td className="px-4 py-3 font-medium">{brand.name}</td>
-                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                  {brand.slug}
-                </td>
-                <td className="max-w-xs truncate px-4 py-3 text-muted-foreground">
-                  {brand.description || "\u2014"}
-                </td>
-                <td className="px-4 py-3">
-                  <ActiveStatusBadge active={brand.status === "active"} />
-                </td>
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {dateFormatter.format(new Date(brand.updatedAt))}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(brand)}
-                    >
-                      Edit
-                    </Button>
-                    {brand.status === "active" ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDeactivate(brand)}
-                      >
-                        Archive
-                      </Button>
-                    ) : null}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <DataTable
+        columns={columns({ onEdit, onDeactivate })}
+        data={brands}
+        getRowId={(brand) => brand._id}
+        minWidth={720}
+      />
     </div>
   );
 }

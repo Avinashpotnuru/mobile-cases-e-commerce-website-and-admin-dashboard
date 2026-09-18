@@ -5,6 +5,8 @@ import {
   INVENTORY_COLLECTION,
   MOBILE_MODEL_COLLECTION,
   ORDER_COLLECTION,
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
   PRODUCT_COLLECTION,
   type Order,
   type OrderStatus,
@@ -45,6 +47,8 @@ export interface DashboardOrderSummary {
   paid: number;
   pendingPayment: number;
   revenueCents: number;
+  statusCounts: Record<OrderStatus, number>;
+  paymentCounts: Record<PaymentStatus, number>;
   recent: RecentOrder[];
 }
 
@@ -115,7 +119,7 @@ async function getInventorySummary(): Promise<DashboardInventorySummary> {
 
 async function getOrderSummary(): Promise<DashboardOrderSummary> {
   const db = await getDb();
-  const [orders, recent] = await Promise.all([
+  const [orders, statusRows, paymentRows, recent] = await Promise.all([
     db
       .collection(ORDER_COLLECTION)
       .aggregate<{
@@ -141,6 +145,18 @@ async function getOrderSummary(): Promise<DashboardOrderSummary> {
             },
           },
         },
+      ])
+      .toArray(),
+    db
+      .collection(ORDER_COLLECTION)
+      .aggregate<{ _id: string; count: number }>([
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ])
+      .toArray(),
+    db
+      .collection(ORDER_COLLECTION)
+      .aggregate<{ _id: string; count: number }>([
+        { $group: { _id: "$paymentStatus", count: { $sum: 1 } } },
       ])
       .toArray(),
     db
@@ -170,7 +186,19 @@ async function getOrderSummary(): Promise<DashboardOrderSummary> {
     pendingPayment: 0,
     revenueCents: 0,
   };
-  return { ...summary, recent };
+  const statusCounts = Object.fromEntries(
+    ORDER_STATUSES.map((status) => [status, 0]),
+  ) as Record<OrderStatus, number>;
+  for (const row of statusRows) {
+    statusCounts[row._id as OrderStatus] = row.count;
+  }
+  const paymentCounts = Object.fromEntries(
+    PAYMENT_STATUSES.map((status) => [status, 0]),
+  ) as Record<PaymentStatus, number>;
+  for (const row of paymentRows) {
+    paymentCounts[row._id as PaymentStatus] = row.count;
+  }
+  return { ...summary, statusCounts, paymentCounts, recent };
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {

@@ -66,23 +66,23 @@ export function OrderFilters({
           ))}
         </Select>
       </label>
-      <div className="flex items-end gap-2">
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          Placed from
+      <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:gap-2">
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium text-muted-foreground lg:flex-none lg:flex-row lg:items-center lg:gap-2">
+          <span className="text-nowrap">Placed from</span>
           <Input
             type="date"
             value={dateFrom}
             onChange={(event) => onDateFromChange(event.target.value)}
-            className="h-10 w-auto"
+            className="h-10 w-full lg:w-[140px]"
           />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          to
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium text-muted-foreground lg:flex-none lg:flex-row lg:items-center lg:gap-2">
+          <span className="text-nowrap">to</span>
           <Input
             type="date"
             value={dateTo}
             onChange={(event) => onDateToChange(event.target.value)}
-            className="h-10 w-auto"
+            className="h-10 w-full lg:w-[140px]"
           />
         </label>
       </div>
