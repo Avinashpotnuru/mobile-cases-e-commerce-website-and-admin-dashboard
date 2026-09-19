@@ -21,7 +21,7 @@ import {
 } from "@/lib/validation";
 import type { PaginatedResult } from "@/types/pagination";
 
-const DEFAULT_CURRENCY = "USD";
+const DEFAULT_CURRENCY = "INR";
 const MAX_IMAGES = 10;
 const MAX_IMAGE_URL_LENGTH = 500;
 const MAX_MODEL_IDS = 100;

@@ -31,7 +31,7 @@ const insertOrder = (_id) =>
     status: "pending",
     paymentStatus: "unpaid",
     totalCents: 5499,
-    currency: "eur",
+    currency: "INR",
     updatedAt: new Date(),
     createdAt: new Date(),
   });
@@ -101,7 +101,7 @@ try {
   check(
     "initiate returns verified amount from DB",
     initiate.data.payment.amountCents === 5499 &&
-      initiate.data.payment.currency === "eur",
+      initiate.data.payment.currency === "INR",
   );
   check(
     "initiate returns no secrets",
@@ -149,7 +149,7 @@ try {
     provider: "dummy",
     providerPaymentId: `dummy_failed_${TEST_KEY}`,
     amountCents: 5499,
-    currency: "eur",
+    currency: "INR",
     status: "pending",
     createdAt: new Date(),
     updatedAt: new Date(),

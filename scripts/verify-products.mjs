@@ -113,7 +113,7 @@ try {
   check("created product auto-slug", product.slug === productSlug);
   check("created product defaults to active", product.status === "active");
   check("created product keeps priceCents", product.priceCents === 1999);
-  check("created product currency USD", product.currency === "USD");
+  check("created product currency INR", product.currency === "INR");
   check(
     "created product stores compatibility",
     Array.isArray(product.compatibleModelIds) &&

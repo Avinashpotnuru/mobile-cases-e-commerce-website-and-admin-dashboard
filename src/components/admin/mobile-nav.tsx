@@ -8,10 +8,18 @@ import {
   LayersIcon,
   MenuIcon,
 } from "@/components/admin/admin-icons";
+import { SignOutButton } from "@/components/admin/sign-out-button";
 import { AdminNav, type SidebarItem } from "@/components/admin/sidebar";
 
-export function MobileNav({ items }: { items: SidebarItem[] }) {
+export function MobileNav({
+  items,
+  username,
+}: {
+  items: SidebarItem[];
+  username: string;
+}) {
   const [open, setOpen] = useState(false);
+  const initials = username.slice(0, 2).toUpperCase();
 
   useEffect(() => {
     if (!open) {
@@ -85,6 +93,25 @@ export function MobileNav({ items }: { items: SidebarItem[] }) {
             </div>
 
             <div className="shrink-0 border-t border-primary-foreground/10 p-3">
+              {username ? (
+                <div className="flex items-center gap-3 rounded-lg px-3 py-2">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-bold uppercase text-accent-foreground"
+                  >
+                    {initials}
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-medium text-primary-foreground">
+                      {username}
+                    </span>
+                    <span className="text-[11px] text-primary-foreground/50">
+                      Administrator
+                    </span>
+                  </span>
+                  <SignOutButton variant="secondary" />
+                </div>
+              ) : null}
               <Link
                 href="/"
                 onClick={() => setOpen(false)}

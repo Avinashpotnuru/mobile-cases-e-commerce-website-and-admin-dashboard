@@ -2,9 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonVariant } from "@/components/ui/button";
 
-export function SignOutButton() {
+export function SignOutButton({
+  variant = "ghost",
+}: {
+  variant?: ButtonVariant;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -21,7 +25,7 @@ export function SignOutButton() {
 
   return (
     <Button
-      variant="ghost"
+      variant={variant}
       size="sm"
       onClick={signOut}
       loading={pending}

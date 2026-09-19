@@ -3,79 +3,52 @@
 import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/components/ui/cn";
-import {
-  PRODUCT_VIEWS,
-  ProductView,
-} from "./product-visuals";
 
 type ProductGalleryProps = {
   images: string[];
   productName: string;
 };
 
+function NoImagesPlaceholder() {
+  return (
+    <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-10 text-center sm:min-h-[480px]">
+      <span
+        aria-hidden="true"
+        className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-card text-muted-foreground"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-6 w-6"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <circle cx="9" cy="9" r="2" />
+          <path d="m21 15-3.34-3.34a2 2 0 0 0-2.83 0L5 21" />
+        </svg>
+      </span>
+      <p className="font-display text-base font-medium text-foreground">
+        No product images yet
+      </p>
+      <p className="max-w-xs text-sm text-muted-foreground">
+        Photos of this case are not added yet. Check back soon.
+      </p>
+    </div>
+  );
+}
+
 export function ProductGallery({ images, productName }: ProductGalleryProps) {
   const [selected, setSelected] = useState(0);
 
-  const hasRealImages = images.length > 0;
-
-  if (!hasRealImages) {
-    const view = (PRODUCT_VIEWS[selected] ?? PRODUCT_VIEWS[0]).id;
-    const currentLabel =
-      PRODUCT_VIEWS[selected]?.label ?? PRODUCT_VIEWS[0].label;
-
-    return (
-      <div>
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card via-muted/10 to-card shadow-sm">
-          <div className="mx-auto aspect-[4/5] w-full max-w-lg p-5 sm:aspect-square sm:p-6">
-            <div key={view} className="hero-rise h-full w-full">
-              <ProductView view={view} className="h-full w-full" />
-            </div>
-          </div>
-
-          <div className="absolute bottom-4 left-4 flex items-center gap-1.5 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-foreground uppercase backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            {currentLabel}
-          </div>
-          <div className="absolute right-4 bottom-4 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground tabular-nums backdrop-blur-sm">
-            {selected + 1} / {PRODUCT_VIEWS.length}
-          </div>
-        </div>
-
-        <div
-          className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5"
-          role="group"
-          aria-label="Product views from different angles"
-        >
-          {PRODUCT_VIEWS.map((v, i) => (
-            <button
-              key={v.id}
-              type="button"
-              aria-label={`${v.label} view, image ${i + 1} of ${PRODUCT_VIEWS.length}`}
-              aria-pressed={i === selected}
-              onClick={() => setSelected(i)}
-              className={cn(
-                "group aspect-[4/5] overflow-hidden rounded-xl border-2 bg-card transition-all duration-300",
-                i === selected
-                  ? "border-accent shadow-md ring-2 ring-accent/20"
-                  : "border-border hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-sm",
-              )}
-            >
-              <ProductView
-                view={v.id}
-                className="h-full w-full transition-transform duration-300 group-hover:scale-[1.06]"
-              />
-            </button>
-          ))}
-        </div>
-
-        <p className="mt-3 text-center text-[11px] font-medium tracking-[0.22em] text-muted-foreground uppercase">
-          Front &middot; Back &middot; Side &middot; Top &middot; Camera
-        </p>
-      </div>
-    );
+  if (images.length === 0) {
+    return <NoImagesPlaceholder />;
   }
 
-  const current = images[selected] ?? images[0];
+  const safeSelected = selected >= images.length ? 0 : selected;
+  const current = images[safeSelected] ?? images[0];
   const hasMultiple = images.length > 1;
 
   return (
@@ -85,7 +58,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           <Image
             key={current}
             src={current}
-            alt={`${productName} — image ${selected + 1}`}
+            alt={`${productName} — image ${safeSelected + 1}`}
             fill
             priority
             sizes="(min-width: 1024px) 50vw, 100vw"
@@ -93,7 +66,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
           />
         </div>
         <div className="absolute right-4 bottom-4 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-[11px] font-medium text-muted-foreground tabular-nums backdrop-blur-sm">
-          {selected + 1} / {images.length}
+          {safeSelected + 1} / {images.length}
         </div>
       </div>
 
@@ -108,11 +81,11 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               key={src}
               type="button"
               aria-label={`Show image ${i + 1} of ${images.length}`}
-              aria-pressed={i === selected}
+              aria-pressed={i === safeSelected}
               onClick={() => setSelected(i)}
               className={cn(
                 "relative aspect-[4/5] overflow-hidden rounded-xl border-2 bg-card transition-all duration-300",
-                i === selected
+                i === safeSelected
                   ? "border-accent shadow-md ring-2 ring-accent/20"
                   : "border-border hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-sm",
               )}

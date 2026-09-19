@@ -10,6 +10,10 @@ import {
   ProductCompatibilityEditor,
   ProductCompatibilityField,
 } from "@/components/admin/products/product-compatibility";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "@/components/admin/admin-icons";
 import type {
   BrandRow,
   MobileModelRow,
@@ -94,6 +98,30 @@ export function ProductForm({
     setImages((current) => current.filter((_: string, i: number) => i !== index));
   }
 
+  function moveImage(index: number, direction: -1 | 1) {
+    setImages((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) {
+        return current;
+      }
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  function setCoverImage(index: number) {
+    setImages((current) => {
+      if (index <= 0 || index >= current.length) {
+        return current;
+      }
+      const next = [...current];
+      const [cover] = next.splice(index, 1);
+      next.unshift(cover);
+      return next;
+    });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrors({});
@@ -112,7 +140,7 @@ export function ProductForm({
     }
     const cents = priceInput.trim() === "" ? 0 : parsePrice(priceInput);
     if (priceInput.trim() !== "" && cents === null) {
-      next.priceCents = "Enter a price like 19.99 (up to two decimals).";
+      next.priceCents = "Enter a price like 799 (up to two decimals).";
     }
     if (!isEdit && compatibleIds.length === 0) {
       next.compatibleModelIds =
@@ -219,7 +247,7 @@ export function ProductForm({
               aria-hidden="true"
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
             >
-              $
+              ₹
             </span>
             <Input
               id="product-price"
@@ -228,8 +256,8 @@ export function ProductForm({
               value={priceInput}
               onChange={(event) => setPriceInput(event.target.value)}
               disabled={submitting}
-              className="pl-7"
-              placeholder="0.00"
+              className="pl-8"
+              placeholder="799"
               aria-invalid={Boolean(errors.priceCents)}
             />
           </div>
@@ -250,31 +278,91 @@ export function ProductForm({
         </Field>
       </div>
 
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex flex-col gap-3">
         <legend className="text-sm font-medium text-foreground">
           Product images
         </legend>
+        <p className="text-xs text-muted-foreground">
+          The first image is the cover shown on product cards. Use the arrows to
+          reorder.
+        </p>
         {images.map((url, index) => (
-          <div key={index} className="flex gap-2">
-            <Input
-              type="url"
-              value={url}
-              onChange={(event) => setImage(index, event.target.value)}
-              disabled={submitting}
-              placeholder={`Image URL ${index + 1} (https://…)`}
-              aria-label={`Image URL ${index + 1}`}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              disabled={submitting}
-              onClick={() => removeImage(index)}
-              aria-label={`Remove image ${index + 1}`}
-            >
-              Remove
-            </Button>
+          <div
+            key={index}
+            className="flex flex-col gap-2 rounded-lg border border-border p-3"
+          >
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground"
+              >
+                {index + 1}
+              </span>
+              {index === 0 ? (
+                <span className="shrink-0 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
+                  Cover
+                </span>
+              ) : null}
+              <Input
+                type="url"
+                value={url}
+                onChange={(event) => setImage(index, event.target.value)}
+                disabled={submitting}
+                placeholder={`Image URL ${index + 1} (https://…)`}
+                aria-label={`Image URL ${index + 1}`}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              {index === 0 ? (
+                <span className="text-[11px] text-muted-foreground">
+                  Shown first everywhere.
+                </span>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={submitting}
+                  onClick={() => setCoverImage(index)}
+                >
+                  Set as cover
+                </Button>
+              )}
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  disabled={submitting || index === 0}
+                  onClick={() => moveImage(index, -1)}
+                  aria-label={`Move image ${index + 1} up`}
+                >
+                  <ChevronUpIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  disabled={submitting || index === images.length - 1}
+                  onClick={() => moveImage(index, 1)}
+                  aria-label={`Move image ${index + 1} down`}
+                >
+                  <ChevronDownIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={submitting}
+                  onClick={() => removeImage(index)}
+                  aria-label={`Remove image ${index + 1}`}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
           </div>
         ))}
         {images.length < MAX_IMAGES ? (

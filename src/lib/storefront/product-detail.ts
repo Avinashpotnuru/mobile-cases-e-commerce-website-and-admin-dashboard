@@ -34,7 +34,12 @@ export type ProductDetailResult = {
 };
 
 function resolveImage(src: string): string | null {
-  if (!src.startsWith("/")) return null;
+  if (/^https?:\/\//i.test(src)) {
+    return src;
+  }
+  if (!src.startsWith("/")) {
+    return null;
+  }
   return existsSync(join(process.cwd(), "public", src)) ? src : null;
 }
 

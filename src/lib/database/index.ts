@@ -13,37 +13,59 @@ if (!uri) {
   );
 }
 
+const mongoUri: string = uri;
+
 declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-let clientPromise: Promise<MongoClient>;
+let prodClientPromise: Promise<MongoClient> | null = null;
 
-if (process.env.NODE_ENV === "development") {
-  const globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
-  };
+function clientOrConnect(): Promise<MongoClient> {
+  const cached =
+    process.env.NODE_ENV === "development"
+      ? globalThis._mongoClientPromise
+      : prodClientPromise;
 
-  if (!globalWithMongo._mongoClientPromise) {
-    globalWithMongo._mongoClientPromise = new MongoClient(uri).connect();
+  if (cached) {
+    return cached;
   }
 
-  clientPromise = globalWithMongo._mongoClientPromise;
-} else {
-  clientPromise = new MongoClient(uri).connect();
+  const promise = new MongoClient(mongoUri, { serverSelectionTimeoutMS: 15000 })
+    .connect()
+    .catch((cause: unknown) => {
+      // Self-heal: clear the cached (now-rejected) promise so the next
+      // request establishes a fresh connection instead of failing forever.
+      if (process.env.NODE_ENV === "development") {
+        globalThis._mongoClientPromise = undefined;
+      } else {
+        prodClientPromise = null;
+      }
+      console.error(
+        "[database] Mongo connection failed; the next request will retry.",
+        cause instanceof Error ? cause.message : cause,
+      );
+      throw cause;
+    });
+
+  if (process.env.NODE_ENV === "development") {
+    globalThis._mongoClientPromise = promise;
+  } else {
+    prodClientPromise = promise;
+  }
+  return promise;
 }
 
 export async function getClient(): Promise<MongoClient> {
-  return clientPromise;
+  return clientOrConnect();
 }
 
 export async function getDb(): Promise<Db> {
-  const client = await clientPromise;
-  return client.db(dbName);
+  return (await clientOrConnect()).db(dbName);
 }
 
 export async function verifyDatabaseConnection(): Promise<{ ok: true; database: string }> {
-  const client = await clientPromise;
+  const client = await clientOrConnect();
   await client.db(dbName).command({ ping: 1 });
   return { ok: true, database: dbName };
 }

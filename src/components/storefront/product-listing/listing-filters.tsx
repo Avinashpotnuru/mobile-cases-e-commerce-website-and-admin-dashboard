@@ -13,6 +13,23 @@ const AVAILABILITY_OPTIONS: { value: AvailabilityFilter; label: string }[] = [
 const captionClasses =
   "text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground";
 
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-3.5 w-3.5 shrink-0 text-accent"
+      aria-hidden="true"
+    >
+      <path d="M4 12.5l5 5L20 6.5" />
+    </svg>
+  );
+}
+
 function preserveParams(
   base: Record<string, string>,
 ): Array<{ name: string; value: string }> {
@@ -33,10 +50,10 @@ export function ListingFilters({
   base: Record<string, string>;
 }) {
   return (
-    <div className="flex flex-wrap items-end gap-x-10 gap-y-5">
-      <fieldset className="flex flex-col gap-2">
+    <div className="flex flex-col gap-7">
+      <fieldset className="flex flex-col gap-3">
         <legend className={captionClasses}>Availability</legend>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-col gap-1.5">
           {AVAILABILITY_OPTIONS.map((option) => {
             const active = option.value === availability;
             return (
@@ -48,41 +65,38 @@ export function ListingFilters({
                   page: null,
                 })}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  "flex items-center justify-between rounded-lg border px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   active
-                    ? "bg-accent text-accent-foreground shadow-sm"
-                    : "border border-border bg-card text-muted-foreground hover:border-accent/40 hover:text-foreground",
+                    ? "border-accent/50 bg-accent/5 text-foreground"
+                    : "border-border text-muted-foreground hover:border-accent/40 hover:text-foreground",
                 )}
               >
                 {option.label}
+                {active ? <CheckIcon /> : null}
               </a>
             );
           })}
         </div>
       </fieldset>
 
-      <form
-        className="flex flex-col gap-2"
-        action="/products"
-        method="get"
-      >
+      <form className="flex flex-col gap-3" action="/products" method="get">
         <span className={captionClasses}>Price range</span>
-        <div className="flex flex-wrap items-center gap-2.5">
-          {preserveParams(base).map((field) => (
-            <input
-              key={field.name}
-              type="hidden"
-              name={field.name}
-              value={field.value}
-            />
-          ))}
+        {preserveParams(base).map((field) => (
+          <input
+            key={field.name}
+            type="hidden"
+            name={field.name}
+            value={field.value}
+          />
+        ))}
+        <div className="grid grid-cols-2 gap-2">
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-sm font-medium text-muted-foreground">
-              $
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
+              ₹
             </span>
             <Input
-              aria-label="Minimum price in dollars"
-              className="w-20 pl-7 sm:w-28"
+              aria-label="Minimum price in rupees"
+              className="h-10 pl-6"
               defaultValue={minPrice ?? ""}
               max={MAX_PRICE_DOLLARS}
               min={0}
@@ -91,16 +105,13 @@ export function ListingFilters({
               type="number"
             />
           </div>
-          <span aria-hidden="true" className="text-sm text-muted-foreground">
-            {"\u2013"}
-          </span>
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-sm font-medium text-muted-foreground">
-              $
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
+              ₹
             </span>
             <Input
-              aria-label="Maximum price in dollars"
-              className="w-20 pl-7 sm:w-28"
+              aria-label="Maximum price in rupees"
+              className="h-10 pl-6"
               defaultValue={maxPrice ?? ""}
               max={MAX_PRICE_DOLLARS}
               min={0}
@@ -109,13 +120,13 @@ export function ListingFilters({
               type="number"
             />
           </div>
-          <button
-            className="h-10 cursor-pointer rounded-sm border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            type="submit"
-          >
-            Apply
-          </button>
         </div>
+        <button
+          className="h-10 cursor-pointer rounded-sm border border-border bg-card text-sm font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          type="submit"
+        >
+          Apply price
+        </button>
       </form>
     </div>
   );

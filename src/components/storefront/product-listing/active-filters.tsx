@@ -34,9 +34,9 @@ export function ActiveFilters({
 
   if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
     const minLabel =
-      filters.minPrice !== undefined ? `$${filters.minPrice}` : "";
+      filters.minPrice !== undefined ? `₹${filters.minPrice}` : "";
     const maxLabel =
-      filters.maxPrice !== undefined ? `$${filters.maxPrice}` : "";
+      filters.maxPrice !== undefined ? `₹${filters.maxPrice}` : "";
     chips.push({
       key: "price",
       label: `${minLabel}\u2013${maxLabel || "max"}`,

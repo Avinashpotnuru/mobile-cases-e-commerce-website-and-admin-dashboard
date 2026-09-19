@@ -6,6 +6,7 @@ import { Pagination } from "@/components/storefront/product-listing/pagination";
 import { ListingSearch } from "@/components/storefront/product-listing/listing-search";
 import { ListingSort } from "@/components/storefront/product-listing/listing-sort";
 import { ListingFilters } from "@/components/storefront/product-listing/listing-filters";
+import { ListingFilterDrawer } from "@/components/storefront/product-listing/listing-filter-drawer";
 import { ActiveFilters } from "@/components/storefront/product-listing/active-filters";
 import { ButtonLink } from "@/components/ui/button";
 
@@ -69,8 +70,26 @@ export async function ProductListingContent({
     paginationParams[key] = value;
   }
 
+  const activeFilterCount =
+    (filters.q ? 1 : 0) +
+    (filters.availability !== "any" ? 1 : 0) +
+    (filters.minPrice !== undefined || filters.maxPrice !== undefined ? 1 : 0);
+
+  const filterPanel = (
+    <>
+      <ListingSearch q={filters.q} base={base} />
+      <div aria-hidden="true" className="h-px bg-border" />
+      <ListingFilters
+        availability={filters.availability}
+        minPrice={filters.minPrice}
+        maxPrice={filters.maxPrice}
+        base={base}
+      />
+    </>
+  );
+
   return (
-    <Container className="py-16 sm:py-20">
+    <Container className="py-12 sm:py-16">
       <header className="border-b border-border pb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           Compatible cases
@@ -86,65 +105,73 @@ export async function ProductListingContent({
         ) : null}
       </header>
 
-      <section aria-label="Search and filters" className="mt-10">
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="flex flex-col gap-6 border-b border-border/70 px-6 py-6 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
-            <ListingSearch q={filters.q} base={base} />
+      <div className="mt-10 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+        <aside aria-label="Filters" className="hidden lg:block">
+          <div className="sticky top-24 flex flex-col gap-6 rounded-2xl border border-border bg-card p-6">
+            {filterPanel}
+          </div>
+        </aside>
+
+        <div className="min-w-0">
+          <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <ListingFilterDrawer activeCount={activeFilterCount}>
+                {filterPanel}
+              </ListingFilterDrawer>
+              <p className="text-sm text-muted-foreground" role="status">
+                {total} {total === 1 ? "case" : "cases"}
+              </p>
+            </div>
             <ListingSort sort={sort} base={base} />
           </div>
-          <div className="px-6 py-5 sm:px-8">
-            <ListingFilters
-              availability={filters.availability}
-              minPrice={filters.minPrice}
-              maxPrice={filters.maxPrice}
-              base={base}
-            />
-          </div>
-        </div>
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-          <ActiveFilters filters={filters} base={base} />
-          <p className="text-sm text-muted-foreground" role="status">
-            {total} {total === 1 ? "case" : "cases"} available
-          </p>
-        </div>
-      </section>
+          {hasActiveFilters ? (
+            <div className="mt-5">
+              <ActiveFilters filters={filters} base={base} />
+            </div>
+          ) : null}
 
-      {total === 0 ? (
-        <div className="py-12">
-          <EmptyState
-            title={
-              hasActiveFilters
-                ? "No cases match your filters"
-                : "No cases found"
-            }
-            description={
-              hasActiveFilters
-                ? "Try adjusting your search or removing a filter to see more results."
-                : "Explore the full collection of precision-fit protective cases."
-            }
-            action={
-              <ButtonLink
-                href={clearAllHref(base)}
-                variant="outline"
-                size="md"
-              >
-                {hasActiveFilters ? "Clear filters" : "View all cases"}
-              </ButtonLink>
-            }
+          {total === 0 ? (
+            <div className="py-12">
+              <EmptyState
+                title={
+                  hasActiveFilters
+                    ? "No cases match your filters"
+                    : "No cases found"
+                }
+                description={
+                  hasActiveFilters
+                    ? "Try adjusting your search or removing a filter to see more results."
+                    : "Explore the full collection of precision-fit protective cases."
+                }
+                action={
+                  <ButtonLink
+                    href={clearAllHref(base)}
+                    variant="outline"
+                    size="md"
+                  >
+                    {hasActiveFilters ? "Clear filters" : "View all cases"}
+                  </ButtonLink>
+                }
+              />
+            </div>
+          ) : (
+            <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <li key={product.id} className="flex">
+                  <ProductCard product={product} />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            params={paginationParams}
           />
         </div>
-      ) : (
-        <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map((product) => (
-            <li key={product.id} className="flex">
-              <ProductCard product={product} />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <Pagination page={page} totalPages={totalPages} params={paginationParams} />
+      </div>
     </Container>
   );
 }

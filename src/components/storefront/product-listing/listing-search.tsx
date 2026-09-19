@@ -3,6 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { buildListingUrl } from "@/components/storefront/product-listing/listing-url";
 
+const captionClasses =
+  "text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground";
+
 export function ListingSearch({
   q,
   base,
@@ -12,41 +15,33 @@ export function ListingSearch({
 }) {
   return (
     <form
-      className="flex w-full max-w-md flex-col gap-2"
+      className="flex flex-col gap-2.5"
       action="/products"
       method="get"
       role="search"
     >
-      <span
-        className={cn(
-          "text-[11px] font-semibold uppercase tracking-[0.18em]",
-          q ? "text-accent" : "text-muted-foreground",
-        )}
-      >
-        Search the collection
-      </span>
+      <span className={cn(captionClasses, q && "text-accent")}>Search</span>
       {Object.entries(base)
         .filter(([key]) => key !== "q" && key !== "page")
         .map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
         ))}
-      <div className="flex items-center gap-2">
-        <Input
-          aria-label="Search cases by name"
-          className="h-11"
-          defaultValue={q ?? ""}
-          name="q"
-          placeholder="Try “silicone” or “leather”…"
-          type="search"
-        />
-        <Button size="lg" type="submit">
+      <Input
+        aria-label="Search cases by name"
+        className="h-10"
+        defaultValue={q ?? ""}
+        name="q"
+        placeholder="Search cases…"
+        type="search"
+      />
+      <div className="flex gap-2">
+        <Button className="flex-1" size="md" type="submit">
           Search
         </Button>
         {q ? (
           <ButtonLink
-            className="shrink-0"
             href={buildListingUrl(base, { q: null, page: null })}
-            size="lg"
+            size="md"
             variant="outline"
           >
             Clear

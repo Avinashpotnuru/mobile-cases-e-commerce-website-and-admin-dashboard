@@ -23,7 +23,7 @@ export function OrderDetails({ order }: { order: OrderDetail }) {
           <p className="mt-1 text-xs text-muted-foreground">
             {itemCount(order)} item{itemCount(order) === 1 ? "" : "s"} ·{" "}
             {formatPrice(order.totalCents, order.currency)}{" "}
-            {order.currency === "USD" ? "" : order.currency}
+            {order.currency === "INR" ? "" : order.currency}
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -57,7 +57,7 @@ export class DummyPaymentProvider implements PaymentProvider {
     return {
       providerPaymentId,
       amountCents: expected?.amountCents ?? 0,
-      currency: expected?.currency ?? "eur",
+      currency: expected?.currency ?? "INR",
       status: mode === "failed" ? "failed" : "succeeded",
     };
   }

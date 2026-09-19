@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { ProductCardView } from "@/components/storefront/product-listing/product-card";
 import { Container } from "@/components/ui/container";
 import { Skeleton } from "@/components/ui/states";
 import { formatPrice } from "@/components/storefront/home/price";
@@ -201,7 +201,7 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
             <ServiceCard
               icon={<TruckIcon />}
               title="Free Shipping"
-              desc="Complimentary standard shipping on orders over $50. Express options at checkout."
+              desc="Complimentary standard shipping on orders over ₹50. Express options at checkout."
             />
             <ServiceCard
               icon={<ReturnIcon />}
@@ -237,7 +237,15 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {related.map((item) => (
-                <RelatedCard key={item.id} item={item} />
+                <ProductCardView
+                  key={item.id}
+                  slug={item.slug}
+                  name={item.name}
+                  priceCents={item.priceCents}
+                  currency={item.currency}
+                  image={item.image}
+                  availability={item.availability}
+                />
               ))}
             </div>
           </div>
@@ -283,7 +291,7 @@ function AvailabilityDot({
 function Highlights({ deviceCount }: { deviceCount: number }) {
   const items = [
     `Precision fit for ${deviceCount} ${deviceCount === 1 ? "device" : "devices"}`,
-    "Free shipping on orders over $50",
+    "Free shipping on orders over ₹50",
     "30-day easy returns",
     "1-year full-coverage warranty",
   ];
@@ -579,46 +587,6 @@ function ServiceCard({
         {desc}
       </p>
     </div>
-  );
-}
-
-function RelatedCard({ item }: { item: ListingProduct }) {
-  return (
-    <Link
-      href={`/products/${item.slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
-    >
-      <div className="relative aspect-square w-full bg-muted/20">
-        {item.image ? (
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center p-4">
-            <div className="relative h-[55%] w-[32%] rounded-[1.4rem] border-[2px] border-border/60 bg-gradient-to-b from-muted/70 to-muted/40">
-              <div className="absolute top-[5%] left-1/2 h-[2px] w-[26%] -translate-x-1/2 rounded-full bg-border/50" />
-              <div className="absolute bottom-[4%] left-1/2 h-[2px] w-[32%] -translate-x-1/2 rounded-full bg-border/40" />
-              <div className="absolute top-[8%] left-[7%] h-[7px] w-[7px] rounded-full border border-border/30 bg-background/30" />
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="flex flex-col gap-1.5 p-4">
-        <p className="text-xs font-medium leading-snug text-foreground line-clamp-2 transition-colors group-hover:text-accent">
-          {item.name}
-        </p>
-        <p className="font-display text-base font-semibold text-accent">
-          {formatPrice({
-            priceCents: item.priceCents,
-            currency: item.currency,
-          })}
-        </p>
-      </div>
-    </Link>
   );
 }
 

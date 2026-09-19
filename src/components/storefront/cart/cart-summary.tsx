@@ -16,7 +16,7 @@ export function CartSummary({ cart }: { cart: CartState }) {
   const deliveryCents = deliveryFree ? 0 : SHIPPING_FEE_CENTS;
   const totalCents = subtotalCents + deliveryCents;
   const checkoutReady = itemCount > 0;
-  const currency = cart.currency ?? "USD";
+  const currency = cart.currency ?? "INR";
 
   return (
     <aside className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:sticky lg:top-24">

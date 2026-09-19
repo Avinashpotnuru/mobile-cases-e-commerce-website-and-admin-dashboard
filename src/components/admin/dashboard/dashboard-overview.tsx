@@ -44,7 +44,7 @@ export function DashboardOverview({ stats }: { stats: DashboardStats }) {
         </h2>
         <KpiCard
           label="Revenue"
-          value={formatCents(orders.revenueCents, "USD")}
+          value={formatCents(orders.revenueCents, "INR")}
           hint={`${orders.paid} order${orders.paid === 1 ? "" : "s"} paid`}
           icon={<ChartBarIcon className="h-[18px] w-[18px]" />}
           tone={orders.paid > 0 ? "success" : "default"}

@@ -89,36 +89,63 @@ export function PromoSection() {
     <>
       <section
         aria-labelledby="promo-heading"
-        className="border-b border-border bg-muted/30 py-20 sm:py-28"
+        className="relative overflow-hidden border-b border-white/10 bg-[#0c0a09] py-20 sm:py-28"
       >
-        <Container>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-amber-500/[0.07] blur-[120px]"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgb(255_255_255/0.6)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.6)_1px,transparent_1px)] [background-size:64px_64px]"
+        />
+        <Container className="relative">
           <Reveal>
             <div className="mx-auto max-w-2xl text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-400">
                 Why choose us
               </p>
               <h2
                 id="promo-heading"
-                className="mt-3 font-display text-4xl font-medium tracking-tight text-foreground sm:text-5xl"
+                className="mt-3 font-display text-4xl font-medium tracking-tight text-stone-50 sm:text-5xl"
               >
                 Built to protect. Designed to impress.
               </h2>
             </div>
           </Reveal>
 
-          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-3">
+          <div className="mx-auto mt-14 grid max-w-5xl gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-3">
             {benefits.map((benefit, index) => (
               <Reveal key={benefit.title} delay={index * 100} className="h-full">
-                <div className="group flex h-full flex-col items-center rounded-lg border border-border bg-card p-8 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 hover:shadow-lg">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full border border-accent/30 text-accent transition-all duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground">
-                    {benefit.icon}
-                  </span>
-                  <h3 className="mt-5 font-display text-xl font-medium text-card-foreground">
+                <div className="group relative flex h-full flex-col overflow-hidden bg-[#0c0a09] p-8 transition-colors duration-500 hover:bg-[#15110d]">
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(ellipse_at_top,rgb(245_158_11/0.14),transparent_70%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  />
+
+                  <div className="relative flex items-start justify-between">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-amber-400/25 bg-amber-500/10 text-amber-400 transition-all duration-500 group-hover:border-amber-400 group-hover:bg-amber-500 group-hover:text-stone-950">
+                      {benefit.icon}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="font-display text-4xl leading-none font-medium text-white/[0.08] tabular-nums transition-colors duration-500 group-hover:text-amber-400/30"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+
+                  <h3 className="relative mt-8 font-display text-xl font-medium text-stone-50">
                     {benefit.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  <p className="relative mt-3 text-sm leading-relaxed text-stone-400">
                     {benefit.description}
                   </p>
+
+                  <span
+                    aria-hidden="true"
+                    className="relative mt-6 block h-px w-full origin-left scale-x-0 bg-gradient-to-r from-amber-400/70 to-transparent transition-transform duration-700 group-hover:scale-x-100"
+                  />
                 </div>
               </Reveal>
             ))}

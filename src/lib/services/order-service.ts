@@ -69,7 +69,7 @@ export async function createOrder(
   const snapshots: OrderItemSnapshot[] = [];
   let subtotalCents = 0;
   let itemCount = 0;
-  let currency = "USD";
+  let currency = "INR";
 
   for (const line of input.lines) {
     if (!ObjectId.isValid(line.productId)) {

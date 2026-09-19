@@ -179,6 +179,6 @@ export function computeCheckoutCosts(
     shippingFree,
     subtotalCents,
     totalCents: subtotalCents + shippingCents,
-    currency: cart.currency ?? "USD",
+    currency: cart.currency ?? "INR",
   };
 }

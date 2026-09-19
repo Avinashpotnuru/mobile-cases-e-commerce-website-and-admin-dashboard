@@ -67,8 +67,14 @@ export type ProductListingQuery = Partial<{
   max: string;
 }>;
 
-function resolveProductImage(src: string | undefined): string | null {
-  if (!src || !src.startsWith("/")) {
+export function resolveProductImage(src: string | undefined): string | null {
+  if (!src) {
+    return null;
+  }
+  if (/^https?:\/\//i.test(src)) {
+    return src;
+  }
+  if (!src.startsWith("/")) {
     return null;
   }
   return existsSync(join(process.cwd(), "public", src)) ? src : null;
