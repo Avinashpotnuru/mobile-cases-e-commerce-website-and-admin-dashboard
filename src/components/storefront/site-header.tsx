@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useCartCount } from "@/components/storefront/use-cart-count";
 import { Container } from "@/components/ui/container";
 import { cn } from "@/components/ui/cn";
 
@@ -80,8 +81,9 @@ function ArrowIcon({ className }: { className?: string }) {
 const iconButton =
   "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
-export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
+export function SiteHeader(_props?: { cartCount?: number }) {
   const pathname = usePathname();
+  const cartCount = useCartCount();
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false);

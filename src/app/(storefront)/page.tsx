@@ -8,6 +8,8 @@ import { PromoSection } from "@/components/storefront/home/promo-section";
 import { SiteFooter } from "@/components/storefront/home/site-footer";
 import { LoadingState } from "@/components/ui/states";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Home",
   description:
