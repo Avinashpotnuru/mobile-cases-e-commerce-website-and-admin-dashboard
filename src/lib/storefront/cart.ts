@@ -11,9 +11,8 @@ import {
 export {
   FREE_SHIPPING_THRESHOLD_CENTS,
   SHIPPING_FEE_CENTS,
+  CART_COOKIE,
 } from "@/lib/storefront/cart-constants";
-
-export const CART_COOKIE = "cart";
 export const MAX_CART_LINES = 20;
 export const MAX_QUANTITY_PER_ITEM = 99;
 
