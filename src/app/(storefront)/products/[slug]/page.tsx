@@ -19,12 +19,26 @@ export async function generateMetadata({
   const { slug } = await params;
   try {
     const product = await getProduct(slug);
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mobilecases.example.com";
+    const url = new URL(`/products/${slug}`, baseUrl).toString();
+    const image = product.images?.[0];
     return {
       title: product.name,
       description: product.description || `${product.name} — precision-fit mobile case`,
+      alternates: { canonical: url },
       openGraph: {
         title: product.name,
         description: product.description || undefined,
+        url,
+        siteName: "Mobile Cases",
+        type: "website",
+        images: image ? [{ url: image, alt: product.name }] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: product.name,
+        description: product.description || undefined,
+        images: image ? [image] : undefined,
       },
     };
   } catch {
