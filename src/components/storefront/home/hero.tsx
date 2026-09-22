@@ -1,5 +1,6 @@
-import type { CSSProperties } from "react";
+﻿import type { CSSProperties } from "react";
 import { ButtonLink } from "@/components/ui/button";
+import { getStoreRating } from "@/lib/services/review-service";
 
 const BRANDS = [
   "Apple",
@@ -32,7 +33,7 @@ function Stars() {
 function DeviceShowcase() {
   return (
     <div className="relative mx-auto w-full max-w-md">
-      <div className="glow-pulse absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/20 blur-3xl" />
+      <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/20 blur-3xl" />
 
       <div className="float-slow relative flex items-center justify-center">
         <div
@@ -79,7 +80,7 @@ function DeviceShowcase() {
         MIL-STD 810G
       </div>
       <div className="absolute -right-3 bottom-24 rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-amber-300 sm:right-0">
-        From ₹749
+        From â‚¹749
       </div>
     </div>
   );
@@ -104,7 +105,8 @@ function BrandMarquee() {
   );
 }
 
-export function Hero() {
+export async function Hero() {
+  const storeRating = await getStoreRating();
   return (
     <section
       aria-labelledby="hero-heading"
@@ -128,7 +130,7 @@ export function Hero() {
           <div className="max-w-xl text-center lg:text-left">
             <p
               className="hero-rise inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-amber-400"
-              style={{ "--hero-delay": "80ms" } as CSSProperties}
+              style={{ "--hero-delay": "40ms" } as CSSProperties}
             >
               <span aria-hidden="true" className="h-px w-8 bg-amber-400/60" />
               Premium mobile cases
@@ -140,13 +142,13 @@ export function Hero() {
             >
               <span
                 className="hero-rise block"
-                style={{ "--hero-delay": "200ms" } as CSSProperties}
+                style={{ "--hero-delay": "160ms" } as CSSProperties}
               >
                 Armor for the
               </span>
               <span
                 className="hero-rise block"
-                style={{ "--hero-delay": "320ms" } as CSSProperties}
+                style={{ "--hero-delay": "250ms" } as CSSProperties}
               >
                 <em className="font-display italic text-amber-400">
                   modern phone.
@@ -156,7 +158,7 @@ export function Hero() {
 
             <p
               className="hero-rise mx-auto mt-7 max-w-md text-base leading-relaxed text-stone-400 sm:text-lg lg:mx-0"
-              style={{ "--hero-delay": "440ms" } as CSSProperties}
+              style={{ "--hero-delay": "340ms" } as CSSProperties}
             >
               Precision-engineered cases from the world&apos;s leading brands.
               Crafted to protect, designed to turn heads.
@@ -164,7 +166,7 @@ export function Hero() {
 
             <div
               className="hero-rise mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
-              style={{ "--hero-delay": "560ms" } as CSSProperties}
+              style={{ "--hero-delay": "480ms" } as CSSProperties}
             >
               <ButtonLink
                 href="/products"
@@ -185,19 +187,25 @@ export function Hero() {
 
             <div
               className="hero-rise mt-10 flex flex-col items-center gap-3 sm:flex-row sm:gap-5 lg:justify-start"
-              style={{ "--hero-delay": "680ms" } as CSSProperties}
+              style={{ "--hero-delay": "500ms" } as CSSProperties}
             >
               <Stars />
               <p className="text-sm text-stone-400">
-                <span className="font-semibold text-stone-100">4.9/5</span> from
-                2,400+ verified buyers
+                <span className="font-semibold text-stone-100">
+                  {storeRating.average !== null
+                    ? `${storeRating.average.toFixed(1)}/5`
+                    : "New arrivals"}
+                </span>
+                {storeRating.count > 0
+                  ? ` from ${storeRating.count.toLocaleString()} verified review${storeRating.count === 1 ? "" : "s"}`
+                  : " â€” be the first to leave a review"}
               </p>
             </div>
           </div>
 
           <div
             className="hero-rise hidden lg:block"
-            style={{ "--hero-delay": "420ms" } as CSSProperties}
+            style={{ "--hero-delay": "300ms" } as CSSProperties}
           >
             <DeviceShowcase />
           </div>

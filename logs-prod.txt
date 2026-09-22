@@ -1,0 +1,12 @@
+
+> mobile-cases@0.1.0 start
+> next start
+
+▲ Next.js 16.3.5
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.101:3000
+✓ Ready in 314ms
+⚠ Warning: Next.js ignored pnpm-lock.yaml in C:\Users\potnu because it is outside the current Git repository (C:\Users\potnu\OneDrive\Desktop\mobile-cases).
+ To use this directory, set `outputFileTracingRoot` in your Next.js config.
+
+✓ Running next.config.ts took 57ms

@@ -40,6 +40,24 @@ import {
   ADMIN_SESSIONS_COLLECTION,
   type AdminSessionRecord,
 } from "./admin-session.ts";
+import {
+  CUSTOMER_COLLECTION,
+  type Customer,
+} from "./customer.ts";
+import {
+  CUSTOMER_SESSIONS_COLLECTION,
+  type CustomerSessionRecord,
+} from "./customer-session.ts";
+import {
+  CUSTOMER_ADDRESSES_COLLECTION,
+  type CustomerAddress,
+} from "./customer-address.ts";
+import {
+  REVIEW_COLLECTION,
+  REVIEW_STATUSES,
+  type Review,
+  type ReviewStatus,
+} from "./review.ts";
 
 export async function ensureDatabaseIndexes(db: Db): Promise<void> {
   await db.collection(BRAND_COLLECTION).createIndexes([
@@ -79,6 +97,27 @@ export async function ensureDatabaseIndexes(db: Db): Promise<void> {
     { key: { tokenHash: 1 }, unique: true },
     { key: { expiresAt: 1 } },
   ]);
+
+  await db.collection(CUSTOMER_COLLECTION).createIndexes([
+    { key: { email: 1 }, unique: true },
+    { key: { createdAt: -1 } },
+  ]);
+
+  await db.collection(CUSTOMER_SESSIONS_COLLECTION).createIndexes([
+    { key: { tokenHash: 1 }, unique: true },
+    { key: { expiresAt: 1 } },
+  ]);
+
+  await db.collection(CUSTOMER_ADDRESSES_COLLECTION).createIndexes([
+    { key: { customerId: 1, createdAt: -1 } },
+    { key: { customerId: 1, isDefault: 1 } },
+  ]);
+
+  await db.collection(REVIEW_COLLECTION).createIndexes([
+    { key: { productId: 1, createdAt: -1 } },
+    { key: { productId: 1, status: 1 } },
+    { key: { productId: 1, customerId: 1 }, unique: true },
+  ]);
 }
 
 export {
@@ -91,6 +130,11 @@ export {
   PAYMENT_STATUSES,
   PAYMENT_COLLECTION,
   ADMIN_SESSIONS_COLLECTION,
+  CUSTOMER_COLLECTION,
+  CUSTOMER_SESSIONS_COLLECTION,
+  CUSTOMER_ADDRESSES_COLLECTION,
+  REVIEW_COLLECTION,
+  REVIEW_STATUSES,
 };
 export type {
   Brand,
@@ -111,4 +155,9 @@ export type {
   PaymentRecord,
   PaymentRecordStatus,
   AdminSessionRecord,
+  Customer,
+  CustomerSessionRecord,
+  CustomerAddress,
+  Review,
+  ReviewStatus,
 };

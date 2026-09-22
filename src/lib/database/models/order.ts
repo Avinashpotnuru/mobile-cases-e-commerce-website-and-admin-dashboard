@@ -57,6 +57,9 @@ export interface Order {
   // ownership of the order on the confirmation page without an account
   // system, since only the person who created the order ever sees it.
   accessCode: string;
+  // Set when the customer was signed in at checkout, linking the order to
+  // their account for order history.
+  customerId?: ObjectId;
   customer: OrderCustomerInfo;
   shippingAddress: OrderShippingAddress;
   delivery: OrderDeliverySnapshot;

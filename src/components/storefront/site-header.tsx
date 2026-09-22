@@ -10,6 +10,8 @@ import {
   useState,
 } from "react";
 import { useCartCount } from "@/components/storefront/use-cart-count";
+import { useWishlistCount } from "@/components/storefront/use-wishlist-count";
+import { useCustomer } from "@/components/storefront/use-customer";
 import { Container } from "@/components/ui/container";
 import { cn } from "@/components/ui/cn";
 
@@ -21,7 +23,9 @@ const NAV_LINKS = [
 const MOBILE_LINKS = [
   { href: "/products", label: "Products" },
   { href: "/brands", label: "Brands" },
+  { href: "/saved", label: "Saved cases" },
   { href: "/cart", label: "Cart" },
+  { href: "/account", label: "My account" },
   { href: "/admin/dashboard", label: "Admin" },
 ];
 
@@ -78,12 +82,49 @@ function ArrowIcon({ className }: { className?: string }) {
   );
 }
 
+function UserIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    </svg>
+  );
+}
+
+function HeartIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
 const iconButton =
   "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 export function SiteHeader(_props?: { cartCount?: number }) {
   const pathname = usePathname();
   const cartCount = useCartCount();
+  const wishlistCount = useWishlistCount();
+  const customer = useCustomer();
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false);
@@ -248,6 +289,35 @@ export function SiteHeader(_props?: { cartCount?: number }) {
               className="hidden px-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
             >
               Admin
+            </Link>
+
+            <Link
+              href={customer ? "/account" : "/account/signin"}
+              aria-label={
+                customer
+                  ? `Account, signed in as ${customer.firstName} ${customer.lastName}`
+                  : "Sign in"
+              }
+              className={iconButton}
+            >
+              <UserIcon className="h-5 w-5" />
+            </Link>
+
+            <Link
+              href="/saved"
+              aria-label={
+                wishlistCount > 0
+                  ? `Saved cases, ${wishlistCount} items`
+                  : "Saved cases"
+              }
+              className={iconButton}
+            >
+              <HeartIcon className="h-5 w-5" />
+              {wishlistCount > 0 ? (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-foreground tabular-nums">
+                  {wishlistCount > 99 ? "99+" : wishlistCount}
+                </span>
+              ) : null}
             </Link>
 
             <Link

@@ -64,8 +64,66 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
   const brandName = models[0]?.brandName ?? "Mobile Cases";
   const brandSlug = models[0]?.brandSlug ?? "";
 
+  const jsonLd = (() => {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ?? "https://mobilecases.example.com";
+    const url = new URL(`/products/${product.slug}`, baseUrl).toString();
+    const image = product.image ?? undefined;
+    return {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Product",
+          name: product.name,
+          description: product.description || undefined,
+          image: image ? [image] : undefined,
+          url,
+            brand: { "@type": "Brand", name: brandName },
+          offers: {
+            "@type": "Offer",
+            url,
+            priceCurrency: product.currency,
+            price: (product.priceCents / 100).toFixed(2),
+            itemCondition: "https://schema.org/NewCondition",
+            availability: inStock
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          },
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: new URL("/", baseUrl).toString() },
+            { "@type": "ListItem", position: 2, name: "Cases", item: new URL("/products", baseUrl).toString() },
+            ...(brandSlug
+              ? [
+                  {
+                    "@type": "ListItem",
+                    position: 3,
+                    name: brandName,
+                    item: new URL(`/products?brand=${brandSlug}`, baseUrl).toString(),
+                  },
+                ]
+              : []),
+           
+            {
+              "@type": "ListItem",
+              position: brandSlug ? 4 : 3,
+              name: product.name,
+              item: url,
+            },
+          ],
+        },
+      ],
+    };
+  })();
+
   return (
     <section className="bg-background pb-24 pt-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Container>
         <nav aria-label="Breadcrumb" className="mb-8">
           <ol className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -239,6 +297,7 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
               {related.map((item) => (
                 <ProductCardView
                   key={item.id}
+                  productId={item.id}
                   slug={item.slug}
                   name={item.name}
                   priceCents={item.priceCents}

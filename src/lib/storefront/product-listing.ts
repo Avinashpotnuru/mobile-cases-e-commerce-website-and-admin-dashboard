@@ -1,10 +1,11 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import { getBrand } from "@/lib/services/brand-service";
 import { getMobileModel } from "@/lib/services/mobile-model-service";
 import { listProducts, type ProductListingSort } from "@/lib/services/product-service";
 import { listInventory } from "@/lib/services/inventory-service";
+import { getRatingsForProducts } from "@/lib/services/review-service";
 import { parsePositiveInteger } from "@/lib/validation";
 import type { Brand, MobileModel } from "@/lib/database/models";
 
@@ -40,6 +41,8 @@ export type ListingProduct = {
   currency: string;
   availability: ProductAvailability;
   quantity: number | null;
+  ratingAvg?: number;
+  ratingCount?: number;
 };
 
 export type ProductListingResult = {
@@ -135,6 +138,22 @@ export function toListingProduct(product: {
     availability: product.availability,
     quantity: product.quantity,
   };
+}
+
+async function attachRatings(items: ListingProduct[]): Promise<ListingProduct[]> {
+  if (items.length === 0) return items;
+  const ratings = await getRatingsForProducts(
+    items.map((item) => new ObjectId(item.id)),
+  );
+  return items.map((item) => {
+    const rating = ratings.get(item.id);
+    if (!rating || rating.count === 0) return item;
+    return {
+      ...item,
+      ratingAvg: rating.average ?? undefined,
+      ratingCount: rating.count,
+    };
+  });
 }
 
 function sortInMemory<T extends { priceCents: number; name: string; createdAt: Date }>(
@@ -242,16 +261,18 @@ export async function loadProductListing(
 
   if (availability === "any") {
     const result = await listProducts(listParams);
-    const products = result.items.map((product) =>
-      toListingProduct({
-        ...product,
-        id: product._id.toHexString(),
-        availability: toAvailability(
-          quantityFor(product),
-          thresholdFor(product),
-        ),
-        quantity: quantityFor(product) ?? null,
-      }),
+    const products = await attachRatings(
+      result.items.map((product) =>
+        toListingProduct({
+          ...product,
+          id: product._id.toHexString(),
+          availability: toAvailability(
+            quantityFor(product),
+            thresholdFor(product),
+          ),
+          quantity: quantityFor(product) ?? null,
+        }),
+      ),
     );
     return {
       brandSlug: brand?.slug ?? "",
@@ -298,15 +319,17 @@ export async function loadProductListing(
     safePage * PRODUCT_PAGE_SIZE,
   );
 
-  const products = slice.map((product) =>
-    toListingProduct({
-      ...product,
-      availability: toAvailability(
-        product.quantity ?? 0,
-        thresholdFor(product),
-      ),
-      quantity: product.quantity ?? null,
-    }),
+  const products = await attachRatings(
+    slice.map((product) =>
+      toListingProduct({
+        ...product,
+        availability: toAvailability(
+          product.quantity ?? 0,
+          thresholdFor(product),
+        ),
+        quantity: product.quantity ?? null,
+      }),
+    ),
   );
 
   return {

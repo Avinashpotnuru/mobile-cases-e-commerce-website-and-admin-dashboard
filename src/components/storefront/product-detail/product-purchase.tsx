@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
+import { WishlistButton } from "@/components/storefront/product-listing/wishlist-button";
 
 type ProductPurchaseProps = {
   productId: string;
@@ -153,6 +154,17 @@ export function ProductPurchase({
           {error}
         </p>
       ) : null}
+
+      <div className="flex items-center justify-center gap-2.5 border-t border-border pt-4">
+        <WishlistButton
+          productId={productId}
+          productName={productName}
+          className="[&_svg]:h-5 [&_svg]:w-5"
+        />
+        <span className="text-sm text-muted-foreground">
+          {added ? "Added to cart" : "Save this case for later"}
+        </span>
+      </div>
 
       {/* Screen reader announcement */}
       <p
