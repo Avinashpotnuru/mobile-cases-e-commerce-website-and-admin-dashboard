@@ -172,29 +172,15 @@
 @keyframes float-slow {
   0%,
   100% {
-    transform: translateY(0) rotate(-5deg);
+    transform: translateY(0) rotate(-6deg);
   }
   50% {
-    transform: translateY(-16px) rotate(-5deg);
+    transform: translateY(-16px) rotate(-6deg);
   }
 }
 
 .float-slow {
   animation: float-slow 6s ease-in-out infinite;
-}
-
-@keyframes glow-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.9;
-  }
-}
-
-.glow-pulse {
-  animation: glow-pulse 5s ease-in-out infinite;
 }
 
 /* Brand marquee */

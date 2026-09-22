@@ -89,7 +89,7 @@ export function PromoSection() {
     <>
       <section
         aria-labelledby="promo-heading"
-        className="relative overflow-hidden border-b border-white/10 bg-[#0c0a09] py-20 sm:py-28"
+        className="relative overflow-hidden border-b border-white/10 bg-[#0c0a09] py-20 [content-visibility:auto] [contain-intrinsic-size:auto_800px] sm:py-28"
       >
         <span
           aria-hidden="true"

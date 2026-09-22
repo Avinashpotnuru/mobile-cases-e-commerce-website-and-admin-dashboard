@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cn } from "@/components/ui/cn";
 import { formatPrice } from "@/components/storefront/home/price";
 import type { ListingProduct, ProductAvailability } from "@/lib/storefront/product-listing";
+import { WishlistButton } from "./wishlist-button";
 
 const availabilityLabels: Record<ProductAvailability, string> = {
   in_stock: "In stock",
@@ -67,22 +68,58 @@ function PhoneSilhouette() {
   );
 }
 
+function RatingRow({
+  ratingAvg,
+  ratingCount,
+}: {
+  ratingAvg: number;
+  ratingCount: number;
+}) {
+  const filled = Math.round(ratingAvg);
+  return (
+    <span
+      className="mt-1.5 flex items-center justify-center gap-1 text-[11px] text-muted-foreground"
+      aria-label={`Rated ${ratingAvg.toFixed(1)} out of 5, based on ${ratingCount} reviews`}
+    >
+      <span
+        aria-hidden="true"
+        className="relative leading-none tracking-tight text-amber-500"
+      >
+        {"\u2605".repeat(filled)}
+        <span className="absolute inset-x-0 top-0 text-border">
+          {"\u2605".repeat(Math.max(0, 5 - filled))}
+        </span>
+      </span>
+      <span className="font-semibold tabular-nums text-foreground">
+        {ratingAvg.toFixed(1)}
+      </span>
+      <span>({ratingCount})</span>
+    </span>
+  );
+}
+
 export type ProductCardViewProps = {
+  productId?: string;
   slug: string;
   name: string;
   priceCents: number;
   currency: string;
   image?: string | null;
   availability?: ProductAvailability;
+  ratingAvg?: number;
+  ratingCount?: number;
 };
 
 export function ProductCardView({
+  productId,
   slug,
   name,
   priceCents,
   currency,
   image,
   availability,
+  ratingAvg,
+  ratingCount,
 }: ProductCardViewProps) {
   const soldOut = availability === "out_of_stock";
   const href = `/products/${slug}`;
@@ -129,12 +166,16 @@ export function ProductCardView({
       </Link>
 
       <div className="mt-4 flex w-full items-center justify-between pl-14 transition-[padding] duration-500 ease-out lg:pl-0 lg:group-hover:pl-14">
-        <span
-          className="text-muted-foreground transition-colors duration-300 group-hover:text-accent"
-          aria-hidden="true"
-        >
-          <HeartIcon />
-        </span>
+        {productId ? (
+          <WishlistButton productId={productId} productName={name} />
+        ) : (
+          <span
+            className="text-muted-foreground transition-colors duration-300 group-hover:text-accent"
+            aria-hidden="true"
+          >
+            <HeartIcon />
+          </span>
+        )}
         <div className="text-center">
           <span className="block text-base font-semibold text-foreground">
             {formatPrice({ priceCents, currency })}
@@ -149,6 +190,9 @@ export function ProductCardView({
               />
               {availabilityLabels[availability]}
             </span>
+          ) : null}
+          {ratingCount && ratingAvg ? (
+            <RatingRow ratingAvg={ratingAvg} ratingCount={ratingCount} />
           ) : null}
         </div>
         <Link
@@ -166,12 +210,15 @@ export function ProductCardView({
 export function ProductCard({ product }: { product: ListingProduct }) {
   return (
     <ProductCardView
+      productId={product.id}
       slug={product.slug}
       name={product.name}
       priceCents={product.priceCents}
       currency={product.currency}
       image={product.image}
       availability={product.availability}
+      ratingAvg={product.ratingAvg}
+      ratingCount={product.ratingCount}
     />
   );
 }

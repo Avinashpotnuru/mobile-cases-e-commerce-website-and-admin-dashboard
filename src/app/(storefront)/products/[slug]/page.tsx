@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getProduct, listProducts } from "@/lib/services/product-service";
 import { NotFoundError } from "@/lib/services/errors";
 import { ProductContent } from "@/components/storefront/product-detail/product-content";
+import { ReviewsSection } from "@/components/storefront/product-detail/reviews";
 
 export const revalidate = 300;
 
@@ -59,5 +60,10 @@ export default async function ProductDetailsPage({
     if (error instanceof NotFoundError) notFound();
     throw error;
   }
-  return <ProductContent productId={product._id.toHexString()} />;
+  return (
+    <div className="divide-y divide-border">
+      <ProductContent productId={product._id.toHexString()} />
+      <ReviewsSection productId={product._id.toHexString()} />
+    </div>
+  );
 }

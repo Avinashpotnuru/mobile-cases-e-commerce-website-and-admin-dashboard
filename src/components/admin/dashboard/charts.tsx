@@ -68,7 +68,7 @@ export function DonutChart({
         className="h-36 w-36 shrink-0 sm:h-40 sm:w-40"
       >
         <title>
-          {centerValue.toLocaleString()} {centerLabel}:{" "}
+          {formatCount(centerValue)} {centerLabel}:{" "}
           {segments
             .map((segment) => `${segment.label} ${Math.round(percentOf(segment, total))}%`)
             .join(", ")}

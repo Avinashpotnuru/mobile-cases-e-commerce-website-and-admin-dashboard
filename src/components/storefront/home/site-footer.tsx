@@ -58,7 +58,7 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer role="contentinfo" className="relative overflow-hidden bg-[#0c0a09] text-stone-400">
+    <footer role="contentinfo" className="relative overflow-hidden bg-[#0c0a09] text-stone-400 [content-visibility:auto] [contain-intrinsic-size:auto_600px]">
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"
@@ -140,7 +140,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-stone-500 sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-stone-400 sm:flex-row">
           <span>&copy; {year} Mobile Cases. All rights reserved.</span>
           <span className="order-3 sm:order-2">Premium cases, precision-made.</span>
           <a

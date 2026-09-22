@@ -297,6 +297,7 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
               {related.map((item) => (
                 <ProductCardView
                   key={item.id}
+                  productId={item.id}
                   slug={item.slug}
                   name={item.name}
                   priceCents={item.priceCents}

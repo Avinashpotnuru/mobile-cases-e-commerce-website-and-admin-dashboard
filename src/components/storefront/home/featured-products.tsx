@@ -83,6 +83,7 @@ export async function FeaturedProducts() {
           {products.map((product, index) => (
             <Reveal key={product._id.toString()} delay={index * 90} className="h-full">
               <ProductCardView
+                productId={product._id.toHexString()}
                 slug={product.slug}
                 name={product.name}
                 priceCents={product.priceCents}
