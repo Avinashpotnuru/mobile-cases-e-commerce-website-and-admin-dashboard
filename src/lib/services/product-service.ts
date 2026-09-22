@@ -261,6 +261,16 @@ export async function getProduct(
   return product;
 }
 
+export async function listProductsByIds(ids: ObjectId[]): Promise<Product[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+  const products = await collection();
+  return products
+    .find({ _id: { $in: ids }, status: "active" as const })
+    .toArray();
+}
+
 export async function createProduct(
   body: Record<string, unknown>,
 ): Promise<Product> {

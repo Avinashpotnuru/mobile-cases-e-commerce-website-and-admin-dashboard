@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/container";
 import { LoadingState } from "@/components/ui/states";
-import { BrandRail } from "@/components/storefront/brand-selection/brand-rail";
+import { BrandsHero } from "@/components/storefront/brand-selection/brands-hero";
+import { BrandDirectory } from "@/components/storefront/brand-selection/brand-directory";
 import { ModelPicker } from "@/components/storefront/brand-selection/model-picker";
+import { ScrollTarget } from "@/components/storefront/brand-selection/scroll-target";
+
+const DEFAULT_BRAND = "apple";
 
 export const metadata: Metadata = {
-  title: "Find your case",
+  title: "Shop by brand — Mobile Cases",
   description:
-    "Choose a brand and mobile model to find compatible cases.",
+    "Choose a brand, then a mobile model, to find cases engineered for a perfect fit.",
 };
 
 export default async function BrandSelectionPage({
@@ -16,48 +20,67 @@ export default async function BrandSelectionPage({
 }: {
   searchParams: Promise<{ brand?: string }>;
 }) {
-  const { brand } = await searchParams;
+  const { brand: requestedBrand } = await searchParams;
+  const brand = requestedBrand ?? DEFAULT_BRAND;
 
   return (
-    <section
-      aria-labelledby="brand-selection-heading"
-      className="border-b border-border bg-background py-16 sm:py-20"
-    >
-      <Container>
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
-          Find your case
-        </p>
-        <h1
-          id="brand-selection-heading"
-          className="mt-3 max-w-2xl font-display text-4xl font-medium tracking-tight text-foreground sm:text-5xl"
-        >
-          Choose your brand
-        </h1>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Pick a brand, then choose your mobile model to see compatible cases.
-        </p>
+    <>
+      <BrandsHero />
 
-        <BrandRail selectedSlug={brand} />
-
-        <div className="mt-14">
-          {brand ? (
-            <Suspense
-              fallback={
-                <LoadingState
-                  label="Loading models…"
-                  className="rounded-md border border-border py-24"
-                />
-              }
-            >
-              <ModelPicker brandSlug={brand} />
-            </Suspense>
-          ) : (
-            <p className="rounded-md border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-              Select a brand above to see its available models.
+      <section
+        id="brand-index"
+        aria-labelledby="brand-index-heading"
+        className="scroll-mt-24 border-b border-border bg-background py-16 sm:py-20"
+      >
+        <Container>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.25em] text-accent uppercase">
+                The catalogue
+              </p>
+              <h2
+                id="brand-index-heading"
+                className="mt-3 font-display text-4xl font-medium tracking-tight text-foreground sm:text-5xl"
+              >
+                Shop the index
+              </h2>
+            </div>
+            <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
+              Every major maker in one place. Pick a brand to reveal its device
+              line-up.
             </p>
-          )}
-        </div>
-      </Container>
-    </section>
+          </div>
+
+          <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-10">
+            <aside className="lg:sticky lg:top-24 lg:self-start">
+              <Suspense
+                fallback={
+                  <LoadingState
+                    label="Loading brands…"
+                    className="rounded-md border border-border"
+                  />
+                }
+              >
+                <BrandDirectory selectedSlug={brand} />
+              </Suspense>
+            </aside>
+
+            <div className="relative min-w-0 scroll-mt-28">
+              {requestedBrand ? <ScrollTarget /> : null}
+              <Suspense
+                fallback={
+                  <LoadingState
+                    label="Loading models…"
+                    className="rounded-2xl border border-border py-24"
+                  />
+                }
+              >
+                <ModelPicker brandSlug={brand} />
+              </Suspense>
+            </div>
+          </div>
+        </Container>
+      </section>
+    </>
   );
 }

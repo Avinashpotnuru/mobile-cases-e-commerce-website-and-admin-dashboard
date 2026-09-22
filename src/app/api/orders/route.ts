@@ -1,5 +1,7 @@
 import type { NextRequest } from "next/server";
+import { ObjectId } from "mongodb";
 import { handleApiError, ok, parseJsonBody } from "@/lib/api";
+import { readCustomerSession } from "@/lib/auth/customer";
 import { CART_COOKIE, parseCartCookie } from "@/lib/storefront/cart";
 import { createOrder } from "@/lib/services/order-service";
 
@@ -9,11 +11,15 @@ export async function POST(request: NextRequest) {
       string,
       unknown
     > | null;
+    const session = await readCustomerSession();
     const lines = parseCartCookie(request.cookies.get(CART_COOKIE)?.value);
     const result = await createOrder({
       idempotencyKey: body?.idempotencyKey,
       form: body ?? {},
       lines,
+      customerId: session
+        ? new ObjectId(session.customerId)
+        : undefined,
     });
 
     const response = ok({ order: result.order, duplicate: !result.created });

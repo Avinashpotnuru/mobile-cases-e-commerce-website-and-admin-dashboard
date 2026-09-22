@@ -28,6 +28,7 @@ export type CreateOrderInput = {
   idempotencyKey: unknown;
   form: Record<string, unknown>;
   lines: CartLineInput[];
+  customerId?: ObjectId;
 };
 
 export type CreateOrderResult = {
@@ -145,6 +146,9 @@ export async function createOrder(
         orderNumber: generateOrderNumber(),
         idempotencyKey,
         accessCode: randomBytes(16).toString("hex"),
+        ...(input.customerId
+          ? { customerId: input.customerId }
+          : {}),
         customer: {
           email: form.email,
           firstName: form.firstName,
@@ -224,6 +228,60 @@ export async function getOrderForConfirmation(
   const order = await db
     .collection<Order>(ORDER_COLLECTION)
     .findOne({ _id: new ObjectId(orderId), accessCode: accessCode.trim() });
+  if (!order) {
+    throw new NotFoundError("Order");
+  }
+  return order;
+}
+
+export type CustomerOrderListItem = Pick<
+  Order,
+  | "_id"
+  | "orderNumber"
+  | "totalCents"
+  | "currency"
+  | "status"
+  | "paymentStatus"
+  | "createdAt"
+> & {
+  itemCount: number;
+};
+
+export async function listCustomerOrders(
+  customerId: ObjectId | string,
+): Promise<CustomerOrderListItem[]> {
+  const id = typeof customerId === "string" ? new ObjectId(customerId) : customerId;
+  const db = await getDb();
+  const orders = await db
+    .collection<Order>(ORDER_COLLECTION)
+    .find({ customerId: id })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .toArray();
+  return orders.map((order) => ({
+    _id: order._id,
+    orderNumber: order.orderNumber,
+    itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    totalCents: order.totalCents,
+    currency: order.currency,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    createdAt: order.createdAt,
+  }));
+}
+
+export async function getCustomerOrder(
+  orderId: string,
+  customerId: ObjectId | string,
+): Promise<Order> {
+  if (!ObjectId.isValid(orderId)) {
+    throw new ValidationError({ orderId: "Invalid order id." });
+  }
+  const id = typeof customerId === "string" ? new ObjectId(customerId) : customerId;
+  const db = await getDb();
+  const order = await db
+    .collection<Order>(ORDER_COLLECTION)
+    .findOne({ _id: new ObjectId(orderId), customerId: id });
   if (!order) {
     throw new NotFoundError("Order");
   }

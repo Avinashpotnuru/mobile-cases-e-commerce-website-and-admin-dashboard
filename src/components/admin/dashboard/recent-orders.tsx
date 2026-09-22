@@ -14,6 +14,7 @@ export function RecentOrders({ orders }: { orders: DashboardOrderSummary }) {
   const rows: RecentOrderRow[] = orders.recent.map((order) => ({
     ...order,
     _id: order._id.toString(),
+    items: order.items.map((item) => ({ quantity: item.quantity })),
   }));
 
   return (

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import type { CartState } from "@/lib/storefront/cart";
 import {
   computeCheckoutCosts,
@@ -15,6 +16,8 @@ import { ShippingSection } from "./checkout-shipping";
 import { DeliverySection } from "./checkout-delivery";
 import { PaymentSection } from "./checkout-payment";
 import { CheckoutSummary } from "./checkout-summary";
+import { useCustomer } from "@/components/storefront/use-customer";
+import type { AddressPublic } from "@/lib/services/address-service";
 
 type CheckoutViewProps = {
   initialCart: CartState;
@@ -40,14 +43,58 @@ function focusFirstError(fieldErrors: Record<string, string>) {
 }
 
 export function CheckoutView({ initialCart }: CheckoutViewProps) {
+  const router = useRouter();
+  const customer = useCustomer();
   const [form, setForm] = useState<CheckoutFormData>(emptyCheckoutForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [verified, setVerified] = useState<VerifiedCheckout | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<AddressPublic[]>([]);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const idempotencyKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    const id = window.setTimeout(async () => {
+      if (!customer) {
+        setSavedAddresses([]);
+        setSaveAddress(false);
+        return;
+      }
+      try {
+        const response = await fetch("/api/account/addresses");
+        const payload = (await response.json()) as {
+          data?: { addresses?: AddressPublic[] };
+        };
+        if (response.ok && Array.isArray(payload.data?.addresses)) {
+          setSavedAddresses(payload.data.addresses);
+        }
+      } catch {
+        setSavedAddresses([]);
+      }
+    }, 0);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer?.id]);
 
   const cart = verified?.cart ?? initialCart;
   const costs = verified?.costs ?? computeCheckoutCosts(cart);
+
+  const applySavedAddress = (address: AddressPublic) => {
+    setForm({
+      ...form,
+      firstName: address.firstName,
+      lastName: address.lastName,
+      phone: address.phone,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2,
+      city: address.city,
+      region: address.region,
+      postalCode: address.postalCode,
+      country: address.country,
+    });
+    setFormError(null);
+  };
 
   const onFieldChange = useCallback(
     (key: keyof CheckoutFormData, value: string) => {
@@ -63,6 +110,65 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
     [],
   );
 
+  const placeOrder = useCallback(
+    async (payload: CheckoutFormData) => {
+      if (!idempotencyKey.current) {
+        idempotencyKey.current =
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `order_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      }
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idempotencyKey: idempotencyKey.current,
+          ...payload,
+        }),
+      });
+      const data = (await response.json()) as {
+        ok?: boolean;
+        data?: {
+          order?: { _id: string; accessCode: string };
+        };
+        error?: { message?: string };
+      };
+      if (!response.ok || data.ok === false || !data.data?.order) {
+        throw new Error(
+          data.error?.message ?? "We couldn't place your order. Please try again.",
+        );
+      }
+      if (saveAddress && customer) {
+        try {
+          await fetch("/api/account/addresses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              label: "Default",
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              phone: payload.phone,
+              addressLine1: payload.addressLine1,
+              addressLine2: payload.addressLine2,
+              city: payload.city,
+              region: payload.region,
+              postalCode: payload.postalCode,
+              country: payload.country,
+              makeDefault: true,
+            }),
+          });
+        } catch {
+          // Saving an address is best-effort and must not block the order.
+        }
+      }
+      const order = data.data.order;
+      router.push(
+        `/order-confirmation/${order._id}?access=${encodeURIComponent(order.accessCode)}`,
+      );
+    },
+    [router, saveAddress, customer],
+  );
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
@@ -71,6 +177,17 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
     if (Object.keys(clientErrors).length > 0) {
       setErrors(clientErrors);
       focusFirstError(clientErrors);
+      return;
+    }
+
+    if (verified) {
+      setSubmitting(true);
+      try {
+        await placeOrder(form);
+      } catch (error) {
+        setSubmitting(false);
+        setFormError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      }
       return;
     }
 
@@ -121,6 +238,51 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
       ) : null}
 
       <div className="space-y-6">
+        {savedAddresses.length > 0 ? (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <label
+              htmlFor="saved-address"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-accent"
+            >
+              Use a saved address
+            </label>
+            <select
+              id="saved-address"
+              value=""
+              disabled={submitting}
+              onChange={(event) => {
+                const found = savedAddresses.find(
+                  (address) => address.id === event.target.value,
+                );
+                if (found) applySavedAddress(found);
+              }}
+              className="mt-2 h-10 w-full rounded-sm border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">Select an address to prefill…</option>
+              {savedAddresses.map((address) => (
+                <option key={address.id} value={address.id}>
+                  {address.label ? `${address.label} — ` : ""}
+                  {address.addressLine1}, {address.city}, {address.region}{" "}
+                  {address.postalCode}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+
+        {customer ? (
+          <label className="flex cursor-pointer items-center gap-2.5 rounded-2xl border border-border bg-card px-5 py-4 text-sm text-foreground shadow-sm">
+            <input
+              type="checkbox"
+              checked={saveAddress}
+              disabled={submitting}
+              onChange={(event) => setSaveAddress(event.target.checked)}
+              className="h-4 w-4 accent-amber-500"
+            />
+            Save this address to my account for next time
+          </label>
+        ) : null}
+
         <CustomerSection
           form={form}
           errors={errors}

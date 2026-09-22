@@ -127,7 +127,7 @@ Public endpoints (JSON envelope: `{ ok: true, data }` / `{ ok: false, error }`):
 | GET    | `/api/inventory`                          | Paginated inventory                 |
 | GET    | `/api/inventory/{productId}`              | Inventory for a product             |
 
-Admin endpoints (`/api/admin/**`) are guarded by `requireAdmin()` — currently a placeholder that returns `401` until authentication is implemented. They cover brand/model/product/inventory create, update, soft-delete, and inventory stock operations.
+Admin endpoints (`/api/admin/**`) are guarded by `requireAdmin()` (session-based authentication via `/api/admin/login`, `/api/admin/logout`, and `/api/admin/session`). They cover brand/model/product/inventory create, update, soft-delete, and inventory stock operations.
 
 All list endpoints support `page` & `pageSize` query params (validated positive integers, capped at 100).
 
@@ -152,9 +152,9 @@ A premium dark-and-gold visual identity lives in `src/app/globals.css` (CSS vari
 
 ## Status
 
-Implemented: project architecture, design system, database layer, seed data, server/API foundation, and the full **catalog** (brands, mobile models, products, product compatibility, inventory).
+Implemented: project architecture, design system, database layer (brands, mobile models, products, product compatibility, inventory, customers, customer sessions, address book, reviews), seed data, the full storefront (home, brand/model selection — including `/brands/[slug]` and `/models/[slug]` —, product listing with search/filter/sort, product details with customer reviews and ratings, cart, checkout, order creation with a linked customer account, order confirmation, order history), customer accounts (sign up, sign in, account area), saved-cases wishlist, an address book with checkout prefill, and the admin app (authentication, dashboard, catalog/product/inventory/order management).
 
-Not yet built: storefront UI, cart, checkout, orders, payment, admin UI, and authentication. See `IMPLEMENTATION_STATUS.md` for the live roadmap.
+Not yet built for production: a real payment gateway (checkout currently uses a dummy/test provider), automated tests, a full accessibility audit, and deployment configuration. See `IMPLEMENTATION_STATUS.md` for the live roadmap.
 
 ## Security Notes
 

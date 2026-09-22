@@ -142,7 +142,7 @@ export function CheckoutSummary({
           loading={submitting}
           className="btn-sheen w-full"
         >
-          Continue to Payment
+          {verified ? "Place order" : "Continue to Payment"}
         </Button>
 
         <Link
