@@ -34,6 +34,7 @@ type ProductFields = Pick<
   | "images"
   | "compatibleModelIds"
   | "priceCents"
+  | "marketingPriceCents"
   | "status"
 >;
 
@@ -304,6 +305,30 @@ export async function createProduct(
         : null,
   ]);
 
+  let ruledOutPriceCents: number | undefined;
+  if (isEmpty(body.marketingPriceCents)) {
+    fieldErrors.push(["marketingPriceCents", null]);
+  } else {
+    const marketing = parsePriceCents(body.marketingPriceCents);
+    if (marketing === null) {
+      fieldErrors.push([
+        "marketingPriceCents",
+        "marketingPriceCents must be a non-negative integer.",
+      ]);
+    } else if (
+      !isEmpty(body.priceCents) &&
+      marketing <= (parsePriceCents(body.priceCents) ?? 0)
+    ) {
+      fieldErrors.push([
+        "marketingPriceCents",
+        "marketingPriceCents must be greater than the sale price.",
+      ]);
+    } else {
+      ruledOutPriceCents = marketing;
+      fieldErrors.push(["marketingPriceCents", null]);
+    }
+  }
+
   const modelIdsResult = parseModelIds(body.compatibleModelIds);
   fieldErrors.push(["compatibleModelIds", modelIdsResult.error]);
 
@@ -360,6 +385,9 @@ export async function createProduct(
       : [],
     priceCents: parsePriceCents(body.priceCents) ?? 0,
     currency: DEFAULT_CURRENCY,
+    ...(ruledOutPriceCents !== undefined
+      ? { marketingPriceCents: ruledOutPriceCents }
+      : {}),
     compatibleModelIds,
     status,
     createdAt: now,
@@ -438,6 +466,37 @@ export async function updateProduct(
       set.priceCents = cents;
     }
   }
+  let clearingMarketing = false;
+  if ("marketingPriceCents" in body) {
+    if (isEmpty(body.marketingPriceCents)) {
+      clearingMarketing = true;
+    } else {
+      const marketing = parsePriceCents(body.marketingPriceCents);
+      if (marketing === null) {
+        fieldErrors.push([
+          "marketingPriceCents",
+          "marketingPriceCents must be a non-negative integer.",
+        ]);
+      } else {
+        let salePrice: number | null = null;
+        if ("priceCents" in body) {
+          salePrice = parsePriceCents(body.priceCents);
+        } else {
+          const products = await collection();
+          const existing = await products.findOne({ _id: productId });
+          salePrice = existing?.priceCents ?? null;
+        }
+        if (salePrice !== null && marketing <= salePrice) {
+          fieldErrors.push([
+            "marketingPriceCents",
+            "marketingPriceCents must be greater than the sale price.",
+          ]);
+        } else {
+          set.marketingPriceCents = marketing;
+        }
+      }
+    }
+  }
   if ("compatibleModelIds" in body) {
     const modelIdsResult = parseModelIds(body.compatibleModelIds);
     if (modelIdsResult.ids) {
@@ -484,9 +543,16 @@ export async function updateProduct(
     }
   }
 
+  const update: { $set: Partial<Product>; $unset?: Record<string, ""> } = {
+    $set: { ...set, updatedAt: new Date() },
+  };
+  if (clearingMarketing) {
+    update.$unset = { marketingPriceCents: "" };
+  }
+
   const updated = await products.findOneAndUpdate(
     { _id: productId },
-    { $set: { ...set, updatedAt: new Date() } },
+    update,
     { returnDocument: "after", includeResultMetadata: false },
   );
   if (!updated) {

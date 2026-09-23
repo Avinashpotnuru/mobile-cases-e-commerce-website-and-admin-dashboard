@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
       idempotencyKey: body?.idempotencyKey,
       form: body ?? {},
       lines,
+      couponCode:
+        typeof body?.couponCode === "string" ? body.couponCode : undefined,
       customerId: session
         ? new ObjectId(session.customerId)
         : undefined,

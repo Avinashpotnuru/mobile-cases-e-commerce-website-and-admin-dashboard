@@ -68,6 +68,25 @@ export function OrderSummary({ order }: OrderSummaryProps) {
                 })}
           </dd>
         </div>
+        {order.discountCents && order.discountCents > 0 ? (
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">
+              Coupon discount
+              {order.couponCode ? (
+                <span className="ml-1 rounded border border-border px-1 py-px text-[10px] font-semibold tracking-wide">
+                  {order.couponCode}
+                </span>
+              ) : null}
+            </dt>
+            <dd className="font-medium text-success tabular-nums">
+              {"\u2212"}
+              {formatPrice({
+                priceCents: order.discountCents,
+                currency: order.currency,
+              })}
+            </dd>
+          </div>
+        ) : null}
         <div className="flex justify-between border-t border-border pt-3">
           <dt className="font-semibold text-foreground">Total</dt>
           <dd className="font-display text-xl font-semibold text-foreground tabular-nums">

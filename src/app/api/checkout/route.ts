@@ -10,7 +10,9 @@ import {
   normalizeCheckoutForm,
   validateCheckoutForm,
 } from "@/lib/storefront/checkout";
-import { ValidationError } from "@/lib/services/errors";
+import { NotFoundError, ValidationError } from "@/lib/services/errors";
+import { CouponValidationError } from "@/lib/services/errors";
+import { getCoupon, validateCoupon } from "@/lib/services/coupon-service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +33,30 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const costs = computeCheckoutCosts(cart);
+    const couponCode =
+      typeof body?.couponCode === "string" &&
+      body.couponCode.trim().length > 0
+        ? body.couponCode.trim().toUpperCase()
+        : undefined;
+
+    let coupon: { couponCode: string; discountCents: number } | undefined;
+    if (couponCode) {
+      let couponDoc;
+      try {
+        couponDoc = await getCoupon(couponCode);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw new CouponValidationError(
+            "This coupon code doesn't exist.",
+          );
+        }
+        throw error;
+      }
+      const discountCents = validateCoupon(couponDoc, cart.subtotalCents);
+      coupon = { couponCode: couponDoc.code, discountCents };
+    }
+
+    const costs = computeCheckoutCosts(cart, coupon);
     return ok({ cart, costs });
   } catch (error) {
     return handleApiError(error, { method: request.method, url: request.url });

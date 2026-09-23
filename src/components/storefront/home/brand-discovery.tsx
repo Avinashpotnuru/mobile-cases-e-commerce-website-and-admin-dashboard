@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/ui/states";
 import { Reveal } from "./reveal";
 import type { Brand } from "@/lib/database/models";
 
-const FEATURED_LIMIT = 20;
+const FEATURED_LIMIT = 6;
 
 export async function BrandDiscovery() {
   let brands: Brand[] = [];
@@ -59,8 +59,8 @@ export async function BrandDiscovery() {
           </div>
         </Reveal>
 
-        <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {brands.map((brand, index) => (
+        <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto]">
+          {brands.slice(0, 5).map((brand, index) => (
             <Reveal key={brand._id.toString()} delay={index * 70} className="h-full">
               <Link
                 href={`/brands?brand=${brand.slug}`}
@@ -123,6 +123,25 @@ export async function BrandDiscovery() {
               </Link>
             </Reveal>
           ))}
+          <div className="flex items-center justify-center sm:justify-center lg:justify-start">
+            <Link
+              href="/brands"
+              aria-label="See all brands"
+              className="group inline-flex h-11 w-11 items-center justify-center rounded-full text-accent transition-transform duration-300 hover:translate-x-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </Container>
     </section>

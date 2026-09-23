@@ -17,6 +17,7 @@ import { DeliverySection } from "./checkout-delivery";
 import { PaymentSection } from "./checkout-payment";
 import { CheckoutSummary } from "./checkout-summary";
 import { useCustomer } from "@/components/storefront/use-customer";
+import { formatPrice } from "@/components/storefront/home/price";
 import type { AddressPublic } from "@/lib/services/address-service";
 
 type CheckoutViewProps = {
@@ -52,6 +53,15 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
   const [submitting, setSubmitting] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<AddressPublic[]>([]);
   const [saveAddress, setSaveAddress] = useState(false);
+  const [couponValue, setCouponValue] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountCents: number;
+  } | null>(null);
+  const [couponStatus, setCouponStatus] = useState<
+    "idle" | "checking" | "applied" | "error"
+  >("idle");
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -78,7 +88,77 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
   }, [customer?.id]);
 
   const cart = verified?.cart ?? initialCart;
-  const costs = verified?.costs ?? computeCheckoutCosts(cart);
+  const costs =
+    verified?.costs ??
+    computeCheckoutCosts(
+      cart,
+      appliedCoupon
+        ? {
+            couponCode: appliedCoupon.code,
+            discountCents: appliedCoupon.discountCents,
+          }
+        : undefined,
+    );
+
+  const couponCodeForOrder =
+    verified?.costs.couponCode ?? appliedCoupon?.code;
+
+  const applyCoupon = async (rawCode: string) => {
+    const code = rawCode.trim().toUpperCase();
+    if (!code || couponStatus === "checking") return;
+    if (cart.subtotalCents <= 0) {
+      setCouponStatus("error");
+      setCouponMessage("Add items to your cart before applying a coupon.");
+      return;
+    }
+    setCouponStatus("checking");
+    setCouponMessage(null);
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          subtotalCents: cart.subtotalCents,
+        }),
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        data?: { code: string; discountCents: number };
+        error?: { message?: string };
+      };
+      if (!response.ok || payload.ok === false || !payload.data) {
+        setCouponStatus("error");
+        setCouponMessage(
+          payload.error?.message ?? "This coupon couldn't be applied.",
+        );
+        return;
+      }
+      setAppliedCoupon({
+        code: payload.data.code,
+        discountCents: payload.data.discountCents,
+      });
+      setCouponStatus("applied");
+      setCouponValue("");
+      setCouponMessage(
+        `${payload.data.code} applied — you saved ${formatPrice({
+          priceCents: payload.data.discountCents,
+          currency: costs.currency,
+        })}.`,
+      );
+      setVerified(null);
+    } catch {
+      setCouponStatus("error");
+      setCouponMessage("Something went wrong. Please try again.");
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponStatus("idle");
+    setCouponMessage(null);
+    setVerified(null);
+  };
 
   const applySavedAddress = (address: AddressPublic) => {
     setForm({
@@ -124,6 +204,9 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
         body: JSON.stringify({
           idempotencyKey: idempotencyKey.current,
           ...payload,
+          ...(couponCodeForOrder
+            ? { couponCode: couponCodeForOrder }
+            : {}),
         }),
       });
       const data = (await response.json()) as {
@@ -166,7 +249,7 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
         `/order-confirmation/${order._id}?access=${encodeURIComponent(order.accessCode)}`,
       );
     },
-    [router, saveAddress, customer],
+    [router, saveAddress, customer, couponCodeForOrder],
   );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -196,7 +279,12 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          ...(couponCodeForOrder
+            ? { couponCode: couponCodeForOrder }
+            : {}),
+        }),
       });
       const payload = (await response.json()) as ApiPayload;
       if (!response.ok || payload.ok === false || !payload.data) {
@@ -310,6 +398,12 @@ export function CheckoutView({ initialCart }: CheckoutViewProps) {
         costs={costs}
         submitting={submitting}
         verified={verified !== null}
+        couponValue={couponValue}
+        onCouponChange={setCouponValue}
+        onApplyCoupon={applyCoupon}
+        onRemoveCoupon={removeCoupon}
+        couponStatus={couponStatus}
+        couponMessage={couponMessage}
       />
     </form>
   );

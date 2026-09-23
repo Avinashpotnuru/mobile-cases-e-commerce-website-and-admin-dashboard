@@ -63,6 +63,9 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
     result;
   const brandName = models[0]?.brandName ?? "Mobile Cases";
   const brandSlug = models[0]?.brandSlug ?? "";
+  const isSale =
+    product.marketingPriceCents !== undefined &&
+    product.marketingPriceCents > product.priceCents;
 
   const jsonLd = (() => {
     const baseUrl =
@@ -191,12 +194,31 @@ async function ProductContentLoaded({ productId }: ProductContentProps) {
             </div>
 
             <div className="border-l-2 border-accent pl-4">
-              <p className="font-display text-3xl font-semibold text-foreground">
-                {formatPrice({
-                  priceCents: product.priceCents,
-                  currency: product.currency,
-                })}
-                <span className="ml-2 align-middle font-sans text-xs font-normal text-muted-foreground">
+              <p className="flex flex-wrap items-baseline gap-x-3 font-display text-3xl font-semibold text-foreground">
+                <span>
+                  {formatPrice({
+                    priceCents: product.priceCents,
+                    currency: product.currency,
+                  })}
+                </span>
+                {isSale ? (
+                  <>
+                    <span className="text-lg font-medium text-muted-foreground line-through">
+                      {formatPrice({
+                        priceCents: product.marketingPriceCents ?? 0,
+                        currency: product.currency,
+                      })}
+                    </span>
+                    <span className="rounded-full bg-accent px-2.5 py-1 font-sans text-[10px] font-bold tracking-wider uppercase">
+                      {Math.round(
+                        (1 - product.priceCents / (product.marketingPriceCents ?? 1)) *
+                          100,
+                      )}
+                      % off
+                    </span>
+                  </>
+                ) : null}
+                <span className="font-sans text-xs font-normal text-muted-foreground">
                   tax included
                 </span>
               </p>

@@ -28,6 +28,7 @@ type FieldErrors = Partial<
     | "description"
     | "images"
     | "priceCents"
+    | "marketingPriceCents"
     | "status"
     | "compatibleModelIds",
     string
@@ -78,6 +79,11 @@ export function ProductForm({
   const [description, setDescription] = useState(initial?.description ?? "");
   const [priceInput, setPriceInput] = useState(
     initial ? centsToInput(initial.priceCents) : "",
+  );
+  const [marketingPriceInput, setMarketingPriceInput] = useState(
+    initial?.marketingPriceCents !== undefined
+      ? centsToInput(initial.marketingPriceCents)
+      : "",
   );
   const [status, setStatus] = useState<ProductStatus>(initial?.status ?? "active");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
@@ -142,6 +148,24 @@ export function ProductForm({
     if (priceInput.trim() !== "" && cents === null) {
       next.priceCents = "Enter a price like 799 (up to two decimals).";
     }
+    const finalCents = cents ?? 0;
+    const marketingCents =
+      marketingPriceInput.trim() === ""
+        ? undefined
+        : parsePrice(marketingPriceInput);
+if (marketingPriceInput.trim() !== "" && marketingCents === null) {
+      next.marketingPriceCents =
+        "Enter a compare-at price like 999 (up to two decimals).";
+    }
+    if (
+      marketingCents !== undefined &&
+      marketingCents !== null &&
+      marketingCents <= finalCents
+    ) {
+      next.marketingPriceCents =
+        "Compare-at price must be higher than the sale price.";
+    }
+
     if (!isEdit && compatibleIds.length === 0) {
       next.compatibleModelIds =
         "Select at least one compatible mobile model.";
@@ -150,7 +174,6 @@ export function ProductForm({
       setErrors(next);
       return;
     }
-    const finalCents = cents ?? 0;
 
     setSubmitting(true);
     try {
@@ -165,6 +188,7 @@ export function ProductForm({
             slug: slug.trim() || undefined,
             description: description.trim() || undefined,
             priceCents: finalCents,
+            marketingPriceCents: marketingCents ?? null,
             status,
             images: cleanedImages,
             ...(isEdit
@@ -262,21 +286,47 @@ export function ProductForm({
             />
           </div>
         </Field>
-        <Field label="Status" htmlFor="product-status" error={errors.status}>
-          <Select
-            id="product-status"
-            name="status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as ProductStatus)}
-            disabled={submitting}
-            aria-invalid={Boolean(errors.status)}
-          >
-            <option value="active">Active</option>
-            <option value="draft">Draft</option>
-            <option value="archived">Archived</option>
-          </Select>
+        <Field
+          label="Compare-at price"
+          htmlFor="product-compare-price"
+          hint="Optional. Shown as strikethrough for sale pricing."
+          error={errors.marketingPriceCents}
+        >
+          <div className="relative">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+            >
+              ₹
+            </span>
+            <Input
+              id="product-compare-price"
+              name="comparePrice"
+              inputMode="decimal"
+              value={marketingPriceInput}
+              onChange={(event) => setMarketingPriceInput(event.target.value)}
+              disabled={submitting}
+              className="pl-8"
+              placeholder="999"
+              aria-invalid={Boolean(errors.marketingPriceCents)}
+            />
+          </div>
         </Field>
       </div>
+      <Field label="Status" htmlFor="product-status" error={errors.status}>
+        <Select
+          id="product-status"
+          name="status"
+          value={status}
+          onChange={(event) => setStatus(event.target.value as ProductStatus)}
+          disabled={submitting}
+          aria-invalid={Boolean(errors.status)}
+        >
+          <option value="active">Active</option>
+          <option value="draft">Draft</option>
+          <option value="archived">Archived</option>
+        </Select>
+      </Field>
 
       <fieldset className="flex flex-col gap-3">
         <legend className="text-sm font-medium text-foreground">
