@@ -78,6 +78,8 @@ export type CheckoutCosts = {
   shippingCents: number;
   shippingFree: boolean;
   subtotalCents: number;
+  discountCents: number;
+  couponCode?: string;
   totalCents: number;
   currency: string;
 };
@@ -166,6 +168,7 @@ export function validateCheckoutForm(
 
 export function computeCheckoutCosts(
   cart: Pick<CartState, "itemCount" | "subtotalCents" | "currency">,
+  coupon?: { couponCode?: string; discountCents?: number },
 ): CheckoutCosts {
   const itemCount = cart.itemCount;
   const subtotalCents = cart.subtotalCents;
@@ -173,12 +176,20 @@ export function computeCheckoutCosts(
     ? subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS
     : true;
   const shippingCents = shippingFree ? 0 : SHIPPING_FEE_CENTS;
+  const discountCents = Math.min(
+    Math.max(0, coupon?.discountCents ?? 0),
+    subtotalCents,
+  );
   return {
     itemCount,
     shippingCents,
     shippingFree,
     subtotalCents,
-    totalCents: subtotalCents + shippingCents,
+    discountCents,
+    ...(coupon?.couponCode && discountCents > 0
+      ? { couponCode: coupon.couponCode }
+      : {}),
+    totalCents: Math.max(0, subtotalCents - discountCents) + shippingCents,
     currency: cart.currency ?? "INR",
   };
 }

@@ -13,6 +13,12 @@ type CheckoutSummaryProps = {
   costs: CheckoutCosts;
   submitting: boolean;
   verified: boolean;
+  couponValue: string;
+  onCouponChange: (value: string) => void;
+  onApplyCoupon: (code: string) => void;
+  onRemoveCoupon: () => void;
+  couponStatus: "idle" | "checking" | "applied" | "error";
+  couponMessage: string | null;
 };
 
 function MiniPhoneGlyph() {
@@ -30,6 +36,12 @@ export function CheckoutSummary({
   costs,
   submitting,
   verified,
+  couponValue,
+  onCouponChange,
+  onApplyCoupon,
+  onRemoveCoupon,
+  couponStatus,
+  couponMessage,
 }: CheckoutSummaryProps) {
   const availableItems = cart.items.filter((item) => item.inStock);
   const excludedOutOfStock = cart.items.length - availableItems.length > 0;
@@ -88,6 +100,63 @@ export function CheckoutSummary({
         </p>
       ) : null}
 
+      <div className="mt-4 border-t border-border pt-4">
+        <label
+          htmlFor="checkout-coupon"
+          className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground uppercase"
+        >
+          Promo code
+        </label>
+        <div className="mt-2 flex gap-2">
+          <input
+            id="checkout-coupon"
+            name="coupon"
+            value={couponValue}
+            onChange={(event) => onCouponChange(event.target.value)}
+            disabled={submitting || couponStatus === "applied"}
+            placeholder="Enter code"
+            autoCapitalize="characters"
+            spellCheck={false}
+            className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm uppercase tracking-wide text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          {couponStatus === "applied" ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onRemoveCoupon}
+              disabled={submitting}
+              className="shrink-0 px-3"
+            >
+              Remove
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              loading={couponStatus === "checking"}
+              disabled={submitting}
+              onClick={() => onApplyCoupon(couponValue)}
+              className="shrink-0 px-4"
+            >
+              Apply
+            </Button>
+          )}
+        </div>
+        {couponMessage ? (
+          <p
+            role="status"
+            className={cn(
+              "mt-2 text-xs font-medium",
+              couponStatus === "error" ? "text-destructive" : "text-success",
+            )}
+          >
+            {couponMessage}
+          </p>
+        ) : null}
+      </div>
+
       <dl className="mt-4 space-y-2.5 border-t border-border pt-4 text-sm">
         <div className="flex justify-between">
           <dt className="text-muted-foreground">Item{suffix} subtotal</dt>
@@ -98,6 +167,25 @@ export function CheckoutSummary({
             })}
           </dd>
         </div>
+        {costs.discountCents > 0 ? (
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">
+              Coupon discount
+              {costs.couponCode ? (
+                <span className="ml-1 rounded border border-border px-1 py-px text-[10px] font-semibold tracking-wide">
+                  {costs.couponCode}
+                </span>
+              ) : null}
+            </dt>
+            <dd className="font-medium text-success tabular-nums">
+              {"\u2212"}
+              {formatPrice({
+                priceCents: costs.discountCents,
+                currency: costs.currency,
+              })}
+            </dd>
+          </div>
+        ) : null}
         <div className="flex justify-between">
           <dt className="text-muted-foreground">Delivery</dt>
           <dd

@@ -36,7 +36,7 @@ MONGODB_DB=mobile-cases-ecommerce
 
 ### 3. Seed the database
 
-Wipes and reseeds the catalog collections (brands, mobile models, products, inventory) with realistic sample data. Requires explicit confirmation:
+Wipes and reseeds the catalog collections (brands, mobile models, products with sale prices, inventory) with realistic sample data. Requires explicit confirmation:
 
 ```powershell
 $env:SEED_CONFIRM="1"
@@ -74,19 +74,28 @@ UI → Server/API → Service → Database
 src/
 ├── app/                 # Next.js App Router (pages + API routes)
 │   ├── api/
+│   │   ├── coupons/             # Public coupon validation
 │   │   ├── brands/              # Public brand catalog
 │   │   ├── mobile-models/       # Public mobile model catalog
 │   │   ├── products/            # Public product catalog + compatibility
 │   │   ├── inventory/           # Public inventory lookups
+│   │   ├── customer/            # Customer auth + address book
+│   │   ├── orders/              # Public order creation
+│   │   ├── checkout/            # Checkout verification
+│   │   ├── cart/                # Guest cart cookie API
 │   │   └── admin/               # Admin APIs (auth-guarded)
-│   └── ...                      # Storefront / admin pages (next)
+│   └── ...                      # Storefront / admin pages
 ├── components/
-│   └── ui/               # Shared UI components
+│   ├── ui/               # Shared UI components
+│   ├── admin/            # Admin app components
+│   └── storefront/       # Storefront components
 ├── lib/
 │   ├── api/              # Response helpers, body parsing, auth guard, pagination
+│   ├── auth/             # Admin + customer session management
 │   ├── database/         # Mongo connection + models + index management
-│   ├── services/         # Business logic (brand, model, product, inventory)
-│   └── validation/       # Server-side input validators
+│   ├── services/         # Business logic (brand, model, product, inventory, coupon, order)
+│   ├── validation/       # Server-side input validators
+│   └── storefront/       # Cart cookie + checkout cost math
 └── types/                # Shared TypeScript types
 ```
 
@@ -103,10 +112,16 @@ Brand
   └── Mobile Model
         └── Compatible Product
               └── Inventory
+
+Customer ── Address Book
+Customer ── Order ── Coupon
+Admin   ── Coupon (CRUD)
 ```
 
 * A **product** is compatible with one or more **mobile models** (multiple products per model).
 * **Price** is stored in minor units (`priceCents`) and is strictly server-controlled — it is never accepted from client input.
+* **Sale pricing**: an optional `marketingPriceCents` (compare-at) drives sale badges and strike-through prices when it exceeds `priceCents`.
+* **Coupons** are `percent` or `fixed` amount, with optional minimum order, maximum discount, expiry, and usage limit. Codes are case-insensitively unique; eligibility is validated server-side and redemptions are counted atomically inside the order transaction.
 * **Inventory** quantity is `non-negative`, stock changes use atomic Mongo updates, and mutations require active inventory.
 
 ## API Overview
@@ -126,8 +141,23 @@ Public endpoints (JSON envelope: `{ ok: true, data }` / `{ ok: false, error }`):
 | GET    | `/api/products/{slug}/compatible-models`  | Models compatible with a product    |
 | GET    | `/api/inventory`                          | Paginated inventory                 |
 | GET    | `/api/inventory/{productId}`              | Inventory for a product             |
+| GET    | `/api/cart`                               | Read the guest cart cookie          |
+| POST   | `/api/cart`                               | Replace the guest cart cookie       |
+| POST   | `/api/checkout`                           | Verify cart, coupon `couponCode`, address & shipping costs |
+| POST   | `/api/orders`                             | Create an order (optional `couponCode`), clears the cart |
+| POST   | `/api/coupons/validate`                   | Validate a code against a subtotal  |
+| GET    | `/api/customer/session`                   | Current customer session            |
+| POST   | `/api/customer/signup`                   | Create a customer account           |
+| POST   | `/api/customer/login`                    | Sign in                             |
+| POST   | `/api/customer/logout`                   | Sign out                            |
+| GET/POST/DELETE | `/api/account/addresses`        | Customer address book               |
 
-Admin endpoints (`/api/admin/**`) are guarded by `requireAdmin()` (session-based authentication via `/api/admin/login`, `/api/admin/logout`, and `/api/admin/session`). They cover brand/model/product/inventory create, update, soft-delete, and inventory stock operations.
+Admin endpoints (`/api/admin/**`) are guarded by `requireAdmin()` (session-based authentication via `/api/admin/login`, `/api/admin/logout`, and `/api/admin/session`). They cover brand/model/product/inventory/order/coupon create, update, soft-delete, and inventory stock operations:
+
+| Method | Endpoint                        | Description                          |
+| ------ | ------------------------------- | ------------------------------------ |
+| GET/POST | `/api/admin/coupons`          | List / create coupons                |
+| PATCH/DELETE | `/api/admin/coupons/{id}`  | Update / deactivate a coupon         |
 
 All list endpoints support `page` & `pageSize` query params (validated positive integers, capped at 100).
 
@@ -152,13 +182,15 @@ A premium dark-and-gold visual identity lives in `src/app/globals.css` (CSS vari
 
 ## Status
 
-Implemented: project architecture, design system, database layer (brands, mobile models, products, product compatibility, inventory, customers, customer sessions, address book, reviews), seed data, the full storefront (home, brand/model selection — including `/brands/[slug]` and `/models/[slug]` —, product listing with search/filter/sort, product details with customer reviews and ratings, cart, checkout, order creation with a linked customer account, order confirmation, order history), customer accounts (sign up, sign in, account area), saved-cases wishlist, an address book with checkout prefill, and the admin app (authentication, dashboard, catalog/product/inventory/order management).
+Implemented: project architecture, design system, database layer (brands, mobile models, products, product compatibility, inventory, customers, customer sessions, address book, reviews, orders, coupons), seed data, the full storefront (home, brand/model selection — including `/brands/[slug]` and `/models/[slug]` —, product listing with search/filter/sort, product details with customer reviews and ratings, sale pricing with compare-at prices, cart, checkout with coupon redemption and live costs, order creation with a linked customer account, order confirmation with a discount breakdown, order history), customer accounts (sign up, sign in, account area), saved-cases wishlist, an address book with checkout prefill, a public `/coupons` offers page with copy-to-clipboard codes + an FAQ, a storefront Shop FAQ, and the admin app (authentication, dashboard, catalog/product/inventory/order/coupon management).
 
-Not yet built for production: a real payment gateway (checkout currently uses a dummy/test provider), automated tests, a full accessibility audit, and deployment configuration. See `IMPLEMENTATION_STATUS.md` for the live roadmap.
+Not yet built for production: a real payment gateway (checkout currently uses a dummy/test provider), transactional email, refund/restock automation on cancellations, automated tests, and deployment configuration. See `IMPLEMENTATION_STATUS.md` for the live roadmap.
 
 ## Security Notes
 
 * Prices and order totals are only ever determined server-side.
+* Coupon eligibility is validated server-side at checkout and again inside the order transaction; usage counters are clamped atomically so a coupon can never redeem past its limit.
+* Free-shipping thresholds are computed on the pre-discount subtotal, so a coupon discount can never unlock free shipping fraudulently.
 * Stock decrements are atomic and guarded against going negative.
 * All writes are validated and run through the service layer.
 * Secrets live only in `.env.local`, which is never committed.

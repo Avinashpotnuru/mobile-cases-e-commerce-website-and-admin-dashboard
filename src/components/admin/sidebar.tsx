@@ -12,6 +12,7 @@ import {
   PackageIcon,
   SmartphoneIcon,
   TagIcon,
+  TicketIcon,
 } from "@/components/admin/admin-icons";
 
 export type SidebarItem = {
@@ -33,6 +34,8 @@ export function iconForHref(href: string): ReactNode {
       return <PackageIcon className="h-[18px] w-[18px]" />;
     case "/admin/orders":
       return <BagIcon className="h-[18px] w-[18px]" />;
+    case "/admin/coupons":
+      return <TicketIcon className="h-[18px] w-[18px]" />;
     default:
       return null;
   }

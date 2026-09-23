@@ -4,7 +4,9 @@ import { Hero } from "@/components/storefront/home/hero";
 import { BrandDiscovery } from "@/components/storefront/home/brand-discovery";
 import { FeaturedProducts } from "@/components/storefront/home/featured-products";
 import { StatsBar } from "@/components/storefront/home/stats-bar";
+import { OffersSection } from "@/components/storefront/home/offers-section";
 import { PromoSection } from "@/components/storefront/home/promo-section";
+import { ShopFaq } from "@/components/storefront/home/shop-faq";
 import { SiteFooter } from "@/components/storefront/home/site-footer";
 import { LoadingState } from "@/components/ui/states";
 
@@ -31,9 +33,13 @@ export default function HomePage() {
         <StatsBar />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
+        <OffersSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <FeaturedProducts />
       </Suspense>
       <PromoSection />
+      <ShopFaq />
       <SiteFooter />
     </>
   );

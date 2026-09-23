@@ -42,6 +42,16 @@ export function TagIcon(props: AdminIconProps) {
   );
 }
 
+export function TicketIcon(props: AdminIconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M3 9V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a3 3 0 0 0 0 6v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a3 3 0 0 0 0-6Z" />
+      <path d="M15 5h.01" />
+      <path d="M15 19h.01" />
+    </IconBase>
+  );
+}
+
 export function SmartphoneIcon(props: AdminIconProps) {
   return (
     <IconBase {...props}>

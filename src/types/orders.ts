@@ -60,6 +60,8 @@ export interface OrderDetail {
   currency: string;
   subtotalCents: number;
   shippingCents: number;
+  discountCents?: number;
+  couponCode?: string;
   totalCents: number;
   status: OrderStatus;
   paymentStatus: PaymentStatus;

@@ -47,3 +47,10 @@ export class PaymentProviderError extends AppError {
     this.name = "PaymentProviderError";
   }
 }
+
+export class CouponValidationError extends AppError {
+  constructor(message: string) {
+    super(400, "COUPON_INVALID", message);
+    this.name = "CouponValidationError";
+  }
+}

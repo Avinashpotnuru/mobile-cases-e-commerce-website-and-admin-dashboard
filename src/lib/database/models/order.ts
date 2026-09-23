@@ -67,6 +67,9 @@ export interface Order {
   currency: string;
   subtotalCents: number;
   shippingCents: number;
+  // Populated when a coupon was applied at checkout.
+  couponCode?: string;
+  discountCents?: number;
   totalCents: number;
   // Price/name snapshots are stored on each item so later product changes
   // never alter historical orders.

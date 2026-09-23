@@ -153,6 +153,22 @@ export function OrderDetails({ order }: { order: OrderDetail }) {
               {formatPrice(order.shippingCents, order.currency)}
             </span>
           </p>
+          <p
+            className={`flex w-full max-w-[260px] justify-between ${
+              order.discountCents && order.discountCents > 0
+                ? "text-success"
+                : "text-muted-foreground"
+            }`}
+          >
+            <span>
+              Coupon discount{order.couponCode ? ` (${order.couponCode})` : ""}
+            </span>
+            <span className="tabular-nums">
+              {order.discountCents && order.discountCents > 0
+                ? `−${formatPrice(order.discountCents, order.currency)}`
+                : "—"}
+            </span>
+          </p>
           <p className="flex w-full max-w-[260px] justify-between border-t border-border pt-2 font-medium">
             <span>Total</span>
             <span className="tabular-nums">

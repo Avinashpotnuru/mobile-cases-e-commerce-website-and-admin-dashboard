@@ -13,6 +13,7 @@ export default function AdminLayout({
         { label: "Models", href: "/admin/models" },
         { label: "Products", href: "/admin/products" },
         { label: "Inventory", href: "/admin/inventory" },
+        { label: "Coupons", href: "/admin/coupons" },
         { label: "Orders", href: "/admin/orders" },
       ]}
     >

@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/container";
 const shopLinks = [
   { href: "/products", label: "All cases" },
   { href: "/brands", label: "Brands" },
+  { href: "/coupons", label: "Coupons" },
   { href: "/cart", label: "Cart" },
 ];
 

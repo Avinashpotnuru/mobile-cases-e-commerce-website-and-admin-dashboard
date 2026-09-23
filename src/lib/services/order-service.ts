@@ -2,8 +2,10 @@ import { ObjectId, type Filter } from "mongodb";
 import { randomBytes } from "node:crypto";
 import { getClient, getDb } from "@/lib/database";
 import {
+  COUPON_COLLECTION,
   ORDER_COLLECTION,
   ORDER_STATUSES,
+  type Coupon,
   type Order,
   type OrderCustomerInfo,
   type OrderItemSnapshot,
@@ -12,7 +14,8 @@ import {
 import { getProduct } from "@/lib/services/product-service";
 import { getModelsForProduct } from "@/lib/services/product-compatibility-service";
 import { getInventoryByProduct, consumeInventoryByProduct } from "@/lib/services/inventory-service";
-import { NotFoundError, ValidationError } from "@/lib/services/errors";
+import { CouponValidationError, NotFoundError, ValidationError } from "@/lib/services/errors";
+import { validateCoupon } from "@/lib/services/coupon-service";
 import type { PaginatedResult } from "@/types/pagination";
 import {
   DELIVERY_OPTIONS,
@@ -29,6 +32,7 @@ export type CreateOrderInput = {
   form: Record<string, unknown>;
   lines: CartLineInput[];
   customerId?: ObjectId;
+  couponCode?: string;
 };
 
 export type CreateOrderResult = {
@@ -113,15 +117,15 @@ export async function createOrder(
     currency = product.currency;
   }
 
-  const costs = computeCheckoutCosts({
-    itemCount,
-    subtotalCents,
-    currency,
-  });
-
   const deliveryOption =
     DELIVERY_OPTIONS.find((option) => option.id === form.deliveryMethod) ??
     DELIVERY_OPTIONS[0];
+
+  const couponCode =
+    typeof input.couponCode === "string"
+      ? input.couponCode.trim().toUpperCase()
+      : "";
+  const normalizedCoupon = couponCode || undefined;
 
   const client = await getClient();
   const db = await getDb();
@@ -139,6 +143,42 @@ export async function createOrder(
         created = false;
         return;
       }
+
+      let appliedCouponCode: string | undefined;
+      let discountCents = 0;
+      if (normalizedCoupon) {
+        const coupon = await db
+          .collection<Coupon>(COUPON_COLLECTION)
+          .findOne({ code: normalizedCoupon }, { session });
+        if (!coupon) {
+          throw new CouponValidationError("This coupon code doesn't exist.");
+        }
+        discountCents = validateCoupon(coupon, subtotalCents);
+        if (coupon.usageLimit !== undefined) {
+          const claim = await db
+            .collection<Coupon>(COUPON_COLLECTION)
+            .findOneAndUpdate(
+              { _id: coupon._id, usedCount: { $lt: coupon.usageLimit } },
+              { $inc: { usedCount: 1 } },
+              { session, returnDocument: "after", includeResultMetadata: false },
+            );
+          if (!claim) {
+            throw new CouponValidationError(
+              "This coupon could not be applied. It may have been fully redeemed.",
+            );
+          }
+          appliedCouponCode = claim.code;
+        } else {
+          appliedCouponCode = coupon.code;
+        }
+      }
+
+      const costs = computeCheckoutCosts(
+        { itemCount, subtotalCents, currency },
+        appliedCouponCode
+          ? { couponCode: appliedCouponCode, discountCents }
+          : undefined,
+      );
 
       const now = new Date();
       const nextOrder: Order = {
@@ -172,6 +212,12 @@ export async function createOrder(
         currency,
         subtotalCents,
         shippingCents: costs.shippingCents,
+        ...(appliedCouponCode && costs.discountCents > 0
+          ? {
+              couponCode: appliedCouponCode,
+              discountCents: costs.discountCents,
+            }
+          : {}),
         totalCents: costs.totalCents,
         status: "pending",
         paymentStatus: "unpaid",

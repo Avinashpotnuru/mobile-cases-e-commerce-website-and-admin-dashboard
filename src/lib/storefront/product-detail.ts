@@ -125,6 +125,9 @@ export async function loadProductDetail(
           description: p.description,
           images: p.images,
           priceCents: p.priceCents,
+          ...(p.marketingPriceCents !== undefined
+            ? { marketingPriceCents: p.marketingPriceCents }
+            : {}),
           currency: p.currency,
           availability: toAvailability(q, r?.lowStockThreshold),
           quantity: q,
@@ -141,6 +144,9 @@ export async function loadProductDetail(
       description: product.description,
       images: product.images,
       priceCents: product.priceCents,
+      ...(product.marketingPriceCents !== undefined
+        ? { marketingPriceCents: product.marketingPriceCents }
+        : {}),
       currency: product.currency,
       availability,
       quantity,

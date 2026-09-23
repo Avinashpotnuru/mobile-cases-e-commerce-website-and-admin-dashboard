@@ -28,6 +28,7 @@ export interface ProductRow {
   description: string;
   images: string[];
   priceCents: number;
+  marketingPriceCents?: number;
   currency: string;
   compatibleModelIds: string[];
   status: ProductStatus;
@@ -61,6 +62,24 @@ export interface ProductFormValues {
   description: string;
   images: string[];
   priceCents: number;
+  marketingPriceCents?: number;
   status: ProductStatus;
   compatibleModelIds: string[];
+}
+
+export type CouponStatus = "active" | "inactive";
+export type CouponType = "percent" | "fixed";
+
+export interface CouponRow {
+  _id: string;
+  code: string;
+  type: CouponType;
+  value: number;
+  minSubtotalCents?: number;
+  maxDiscountCents?: number;
+  expiresAt?: string;
+  usageLimit?: number;
+  usedCount: number;
+  status: CouponStatus;
+  updatedAt: string;
 }

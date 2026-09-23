@@ -38,6 +38,7 @@ export type ListingProduct = {
   description: string;
   image: string | null;
   priceCents: number;
+  marketingPriceCents?: number;
   currency: string;
   availability: ProductAvailability;
   quantity: number | null;
@@ -123,6 +124,7 @@ export function toListingProduct(product: {
   description: string;
   images: string[];
   priceCents: number;
+  marketingPriceCents?: number;
   currency: string;
   availability: ProductAvailability;
   quantity: number | null;
@@ -134,6 +136,9 @@ export function toListingProduct(product: {
     description: product.description,
     image: resolveProductImage(product.images[0]),
     priceCents: product.priceCents,
+    ...(product.marketingPriceCents !== undefined
+      ? { marketingPriceCents: product.marketingPriceCents }
+      : {}),
     currency: product.currency,
     availability: product.availability,
     quantity: product.quantity,

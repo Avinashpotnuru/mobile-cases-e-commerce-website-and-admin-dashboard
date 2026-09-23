@@ -18,11 +18,13 @@ import { cn } from "@/components/ui/cn";
 const NAV_LINKS = [
   { href: "/products", label: "Products" },
   { href: "/brands", label: "Brands" },
+  { href: "/coupons", label: "Coupons" },
 ];
 
 const MOBILE_LINKS = [
   { href: "/products", label: "Products" },
   { href: "/brands", label: "Brands" },
+  { href: "/coupons", label: "Coupons" },
   { href: "/saved", label: "Saved cases" },
   { href: "/cart", label: "Cart" },
   { href: "/account", label: "My account" },

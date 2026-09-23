@@ -103,6 +103,7 @@ export type ProductCardViewProps = {
   slug: string;
   name: string;
   priceCents: number;
+  marketingPriceCents?: number;
   currency: string;
   image?: string | null;
   availability?: ProductAvailability;
@@ -115,6 +116,7 @@ export function ProductCardView({
   slug,
   name,
   priceCents,
+  marketingPriceCents,
   currency,
   image,
   availability,
@@ -122,6 +124,8 @@ export function ProductCardView({
   ratingCount,
 }: ProductCardViewProps) {
   const soldOut = availability === "out_of_stock";
+  const isSale =
+    marketingPriceCents !== undefined && marketingPriceCents > priceCents;
   const href = `/products/${slug}`;
 
   return (
@@ -147,6 +151,11 @@ export function ProductCardView({
             )}
           </div>
         </div>
+        {isSale ? (
+          <span className="absolute top-3 right-3 z-10 rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold tracking-wider text-accent-foreground uppercase">
+            Sale
+          </span>
+        ) : null}
         {soldOut ? (
           <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/50">
             <span className="rounded-full bg-foreground/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-background">
@@ -177,7 +186,12 @@ export function ProductCardView({
           </span>
         )}
         <div className="text-center">
-          <span className="block text-base font-semibold text-foreground">
+          {isSale ? (
+            <span className="block text-xs font-medium text-muted-foreground line-through">
+              {formatPrice({ priceCents: marketingPriceCents ?? 0, currency })}
+            </span>
+          ) : null}
+          <span className="text-base font-semibold text-foreground">
             {formatPrice({ priceCents, currency })}
           </span>
           {availability ? (
@@ -214,6 +228,7 @@ export function ProductCard({ product }: { product: ListingProduct }) {
       slug={product.slug}
       name={product.name}
       priceCents={product.priceCents}
+      marketingPriceCents={product.marketingPriceCents}
       currency={product.currency}
       image={product.image}
       availability={product.availability}

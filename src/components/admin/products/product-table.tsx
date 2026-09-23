@@ -115,11 +115,28 @@ function columns({
       enableSorting: true,
       meta: { align: "right" },
       header: "Price",
-      cell: ({ row }) => (
-        <span className="font-medium tabular-nums">
-          {formatPrice(row.original.priceCents, row.original.currency)}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const product = row.original;
+        const isSale =
+          product.marketingPriceCents !== undefined &&
+          product.marketingPriceCents > product.priceCents;
+        return (
+          <span className="font-medium tabular-nums">
+            {isSale ? (
+              <>
+                <span className="mr-1.5 text-xs text-muted-foreground line-through">
+                  {formatPrice(product.marketingPriceCents ?? 0, product.currency)}
+                </span>
+                <span className="text-accent">
+                  {formatPrice(product.priceCents, product.currency)}
+                </span>
+              </>
+            ) : (
+              formatPrice(product.priceCents, product.currency)
+            )}
+          </span>
+        );
+      },
     },
     {
       accessorFn: (product) => availabilityOf(stockMap[product._id]).label,

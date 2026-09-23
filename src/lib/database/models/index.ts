@@ -58,6 +58,12 @@ import {
   type Review,
   type ReviewStatus,
 } from "./review.ts";
+import {
+  COUPON_COLLECTION,
+  type Coupon,
+  type CouponStatus,
+  type CouponType,
+} from "./coupon.ts";
 
 export async function ensureDatabaseIndexes(db: Db): Promise<void> {
   await db.collection(BRAND_COLLECTION).createIndexes([
@@ -118,6 +124,11 @@ export async function ensureDatabaseIndexes(db: Db): Promise<void> {
     { key: { productId: 1, status: 1 } },
     { key: { productId: 1, customerId: 1 }, unique: true },
   ]);
+
+  await db.collection(COUPON_COLLECTION).createIndexes([
+    { key: { code: 1 }, unique: true },
+    { key: { status: 1, createdAt: -1 } },
+  ]);
 }
 
 export {
@@ -135,6 +146,7 @@ export {
   CUSTOMER_ADDRESSES_COLLECTION,
   REVIEW_COLLECTION,
   REVIEW_STATUSES,
+  COUPON_COLLECTION,
 };
 export type {
   Brand,
@@ -160,4 +172,7 @@ export type {
   CustomerAddress,
   Review,
   ReviewStatus,
+  Coupon,
+  CouponStatus,
+  CouponType,
 };
