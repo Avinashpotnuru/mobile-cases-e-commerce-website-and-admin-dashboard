@@ -10,6 +10,10 @@ A production-ready e-commerce application for selling mobile phone cases, built 
 * **Styling** — Tailwind CSS v4 with a premium dark + gold design system
 * **Lint / Typecheck** — ESLint, `tsc --noEmit`
 
+## Documentation
+
+Full documentation lives in [`docs/`](docs/README.md) — getting started, architecture, domain model, API reference, checkout & coupons, and security.
+
 ## Getting Started
 
 ### Prerequisites

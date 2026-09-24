@@ -3,6 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;
   --background: #fafaf9;
   --foreground: #0c0a09;
   --card: #ffffff;
@@ -22,9 +23,12 @@
   --ring: #a16207;
   --success: #15803d;
   --success-foreground: #ffffff;
+  --sidebar: #1c1917;
+  --sidebar-foreground: #fafaf9;
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0c0a09;
   --foreground: #fafaf9;
   --card: #1c1917;
@@ -44,6 +48,8 @@
   --ring: #d97706;
   --success: #15803d;
   --success-foreground: #ffffff;
+  --sidebar: #1c1917;
+  --sidebar-foreground: #fafaf9;
 }
 
 @theme inline {
@@ -66,6 +72,8 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
   --font-sans: var(--font-montserrat);
   --font-display: var(--font-cormorant);
 }
@@ -181,6 +189,45 @@
 
 .float-slow {
   animation: float-slow 6s ease-in-out infinite;
+}
+
+/* Gentle vertical bob (no rotation) for floating badges/chips */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-soft {
+  animation: float-soft 5s ease-in-out infinite;
+}
+
+/* Error shake */
+@keyframes shake-x {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake-x 0.45s ease;
 }
 
 /* Brand marquee */

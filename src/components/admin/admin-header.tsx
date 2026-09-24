@@ -1,6 +1,7 @@
 import { readAdminSession, configuredAdminUsername } from "@/lib/auth/admin";
 import { AdminAccountDropdown } from "@/components/admin/admin-account-dropdown";
 import { MobileNav } from "@/components/admin/mobile-nav";
+import { ThemeToggle } from "@/components/storefront/theme-toggle";
 import type { SidebarItem } from "@/components/admin/sidebar";
 
 export async function AdminHeader({ items }: { items: SidebarItem[] }) {
@@ -21,6 +22,7 @@ export async function AdminHeader({ items }: { items: SidebarItem[] }) {
         </p>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <span className="hidden items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground xl:inline-flex">
             <span aria-hidden="true" className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />

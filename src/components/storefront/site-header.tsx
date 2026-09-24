@@ -12,6 +12,7 @@ import {
 import { useCartCount } from "@/components/storefront/use-cart-count";
 import { useWishlistCount } from "@/components/storefront/use-wishlist-count";
 import { useCustomer } from "@/components/storefront/use-customer";
+import { ThemeToggle } from "@/components/storefront/theme-toggle";
 import { Container } from "@/components/ui/container";
 import { cn } from "@/components/ui/cn";
 
@@ -28,7 +29,6 @@ const MOBILE_LINKS = [
   { href: "/saved", label: "Saved cases" },
   { href: "/cart", label: "Cart" },
   { href: "/account", label: "My account" },
-  { href: "/admin/dashboard", label: "Admin" },
 ];
 
 function BagIcon({ className }: { className?: string }) {
@@ -287,13 +287,6 @@ export function SiteHeader(_props?: { cartCount?: number }) {
             </Link>
 
             <Link
-              href="/admin/dashboard"
-              className="hidden px-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:inline-flex"
-            >
-              Admin
-            </Link>
-
-            <Link
               href={customer ? "/account" : "/account/signin"}
               aria-label={
                 customer
@@ -336,6 +329,8 @@ export function SiteHeader(_props?: { cartCount?: number }) {
                 </span>
               ) : null}
             </Link>
+
+            <ThemeToggle />
 
             <Link
               href="/products"

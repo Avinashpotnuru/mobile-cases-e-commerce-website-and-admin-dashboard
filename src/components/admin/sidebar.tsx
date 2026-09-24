@@ -58,17 +58,17 @@ function NavItem({
       aria-current={active ? "page" : undefined}
       className={cn(
         "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-foreground/60",
         active
           ? "bg-background text-foreground shadow-sm"
-          : "text-primary-foreground/70 hover:bg-white/5 hover:text-primary-foreground",
+          : "text-sidebar-foreground/70 hover:bg-white/5 hover:text-sidebar-foreground",
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
           "transition-colors duration-150",
-          active ? "text-accent" : "text-primary-foreground/50 group-hover:text-primary-foreground/80",
+          active ? "text-accent" : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground/80",
         )}
       >
         {iconForHref(item.href)}
@@ -100,7 +100,7 @@ function NavGroup({
   }
   return (
     <div className={cn("flex flex-col gap-1", hidden && "hidden")}>
-      <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-foreground/40">
+      <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">
         {label}
       </p>
       {items.map((item) => {
@@ -143,11 +143,11 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-primary text-primary-foreground lg:flex",
+        "sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex",
         className,
       )}
     >
-      <div className="flex h-16 shrink-0 items-center gap-3 border-b border-primary-foreground/10 px-5">
+      <div className="flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-foreground/10 px-5">
         <span
           aria-hidden="true"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground shadow-sm"
@@ -158,7 +158,7 @@ export function Sidebar({
           <span className="truncate font-display text-lg font-semibold tracking-tight">
             Mobile Cases
           </span>
-          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary-foreground/50">
+          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-sidebar-foreground/50">
             Admin console
           </span>
         </span>
@@ -168,10 +168,10 @@ export function Sidebar({
         <AdminNav items={items} />
       </div>
 
-      <div className="shrink-0 border-t border-primary-foreground/10 p-3">
+      <div className="shrink-0 border-t border-sidebar-foreground/10 p-3">
         <Link
           href="/"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-primary-foreground/70 transition-colors duration-150 hover:bg-white/5 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors duration-150 hover:bg-white/5 hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-foreground/60"
         >
           <ExternalLinkIcon className="h-[18px] w-[18px]" />
           View live store

@@ -144,13 +144,21 @@ export function SiteFooter() {
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-stone-400 sm:flex-row">
           <span>&copy; {year} Mobile Cases. All rights reserved.</span>
           <span className="order-3 sm:order-2">Premium cases, precision-made.</span>
-          <a
-            href="#"
-            className="group order-2 inline-flex items-center gap-1.5 text-xs font-medium text-stone-400 transition-colors duration-200 hover:text-amber-400 sm:order-3"
-          >
-            Back to top
-            <ArrowIcon className="h-3.5 w-3.5 -rotate-90 transition-transform duration-300 group-hover:-translate-y-0.5" />
-          </a>
+          <div className="order-2 flex items-center gap-5 sm:order-3">
+            <Link
+              href="/admin/dashboard"
+              className="text-xs font-medium text-stone-400 transition-colors duration-200 hover:text-amber-400"
+            >
+              Admin
+            </Link>
+            <a
+              href="#"
+              className="group inline-flex items-center gap-1.5 text-xs font-medium text-stone-400 transition-colors duration-200 hover:text-amber-400"
+            >
+              Back to top
+              <ArrowIcon className="h-3.5 w-3.5 -rotate-90 transition-transform duration-300 group-hover:-translate-y-0.5" />
+            </a>
+          </div>
         </div>
       </Container>
     </footer>

@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   description: "Premium cases for mobile phones.",
 };
 
+const themeScript = `(function(){try{var k="mc-theme";var t=localStorage.getItem(k);var dark=t?t==="dark":true;var html=document.documentElement;html.classList.toggle("dark",dark);html.style.colorScheme=dark?"dark":"light";}catch(e){document.documentElement.classList.add("dark");}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -30,8 +32,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );

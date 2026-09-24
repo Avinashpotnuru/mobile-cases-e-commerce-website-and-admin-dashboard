@@ -61,9 +61,9 @@ export function MobileNav({
             role="dialog"
             aria-modal="true"
             aria-label="Admin navigation"
-            className="absolute inset-y-0 left-0 flex w-72 flex-col bg-primary text-primary-foreground shadow-2xl"
+            className="absolute inset-y-0 left-0 flex w-72 flex-col bg-sidebar text-sidebar-foreground shadow-2xl"
           >
-            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-primary-foreground/10 pl-5 pr-2">
+            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-foreground/10 pl-5 pr-2">
               <span
                 aria-hidden="true"
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground"
@@ -74,7 +74,7 @@ export function MobileNav({
                 <span className="font-display text-lg font-semibold leading-tight">
                   Mobile Cases
                 </span>
-                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary-foreground/50">
+                <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-sidebar-foreground/50">
                   Admin console
                 </span>
               </span>
@@ -82,7 +82,7 @@ export function MobileNav({
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close admin navigation"
-                className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-primary-foreground/70 transition-colors hover:bg-white/5 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+                className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-white/5 hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-foreground/60"
               >
                 <CloseIcon className="h-5 w-5" />
               </button>
@@ -92,7 +92,7 @@ export function MobileNav({
               <AdminNav items={items} />
             </div>
 
-            <div className="shrink-0 border-t border-primary-foreground/10 p-3">
+            <div className="shrink-0 border-t border-sidebar-foreground/10 p-3">
               {username ? (
                 <div className="flex items-center gap-3 rounded-lg px-3 py-2">
                   <span
@@ -102,10 +102,10 @@ export function MobileNav({
                     {initials}
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-medium text-primary-foreground">
+                    <span className="truncate text-sm font-medium text-sidebar-foreground">
                       {username}
                     </span>
-                    <span className="text-[11px] text-primary-foreground/50">
+                    <span className="text-[11px] text-sidebar-foreground/50">
                       Administrator
                     </span>
                   </span>
@@ -115,7 +115,7 @@ export function MobileNav({
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
-                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-primary-foreground/70 transition-colors hover:bg-white/5 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60"
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-white/5 hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-foreground/60"
               >
                 <ExternalLinkIcon className="h-[18px] w-[18px]" />
                 View live store
