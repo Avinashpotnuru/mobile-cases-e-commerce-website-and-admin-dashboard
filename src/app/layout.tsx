@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cormorant, Montserrat } from "next/font/google";
 import "./globals.css";
 
@@ -36,7 +37,9 @@ export default function RootLayout({
       className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
       </head>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>

@@ -78,12 +78,14 @@ export async function OffersSection() {
                   <Link
                     key={coupon.code}
                     href="/coupons"
-                    className="group inline-flex items-baseline gap-2 rounded-lg border border-white/10 bg-black/30 px-3.5 py-2 font-mono text-sm tracking-wide transition-colors hover:border-amber-400/60 hover:bg-black/50"
+                    className="group inline-flex max-w-full items-baseline gap-2 rounded-lg border border-white/10 bg-black/30 px-3.5 py-2 font-mono text-sm tracking-wide transition-colors hover:border-amber-400/60 hover:bg-black/50"
                   >
                     <span className="font-semibold text-amber-400">
                       {discountLabel(coupon)}
                     </span>
-                    <span className="text-stone-200">{coupon.code}</span>
+                    <span className="max-w-[38vw] truncate text-stone-200">
+                      {coupon.code}
+                    </span>
                   </Link>
                 ))
               )}

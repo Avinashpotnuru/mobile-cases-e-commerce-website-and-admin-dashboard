@@ -82,7 +82,7 @@ export function AdminDialog({
         )}
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 id={titleId} className="font-display text-2xl font-semibold">
+          <h2 id={titleId} className="min-w-0 font-display text-2xl font-semibold break-words">
             {title}
           </h2>
           <button
@@ -104,7 +104,7 @@ export function AdminDialog({
             </svg>
           </button>
         </div>
-        <div className="mt-5">{children}</div>
+        <div className="mt-5 min-w-0 break-words">{children}</div>
       </div>
     </div>
   );

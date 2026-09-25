@@ -70,10 +70,10 @@ export function OrderSummary({ order }: OrderSummaryProps) {
         </div>
         {order.discountCents && order.discountCents > 0 ? (
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">
+            <dt className="min-w-0 text-muted-foreground">
               Coupon discount
               {order.couponCode ? (
-                <span className="ml-1 rounded border border-border px-1 py-px text-[10px] font-semibold tracking-wide">
+                <span className="ml-1 inline-block max-w-[110px] truncate rounded border border-border px-1 py-px text-[10px] font-semibold tracking-wide align-middle">
                   {order.couponCode}
                 </span>
               ) : null}

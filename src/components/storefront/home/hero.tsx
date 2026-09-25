@@ -91,7 +91,7 @@ function BrandMarquee() {
     <div className="relative overflow-hidden py-6">
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-[#0c0a09] to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-[#0c0a09] to-transparent" />
-      <div className="marquee flex w-max items-center gap-14">
+      <div className="marquee flex w-max items-center gap-10 sm:gap-14">
         {[...BRANDS, ...BRANDS].map((brand, index) => (
           <span
             key={`${brand}-${index}`}
@@ -125,8 +125,8 @@ export async function Hero() {
         className="pointer-events-none absolute -left-32 bottom-0 h-[420px] w-[420px] rounded-full bg-amber-700/10 blur-[120px]"
       />
 
-      <div className="relative mx-auto flex min-h-[88vh] w-full max-w-7xl items-center px-4 py-24 sm:px-6 lg:px-8">
-        <div className="grid w-full items-center gap-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
+      <div className="relative mx-auto flex min-h-svh w-full max-w-7xl items-center px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+        <div className="grid w-full items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
           <div className="max-w-xl text-center lg:text-left">
             <p
               className="hero-rise inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-amber-400"

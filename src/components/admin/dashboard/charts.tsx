@@ -61,11 +61,11 @@ export function DonutChart({
     }, []);
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:justify-start">
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-5 sm:gap-x-8 sm:justify-start">
       <svg
         role="img"
         viewBox={`0 0 ${size} ${size}`}
-        className="h-36 w-36 shrink-0 sm:h-40 sm:w-40"
+        className="h-32 w-32 shrink-0 sm:h-40 sm:w-40"
       >
         <title>
           {formatCount(centerValue)} {centerLabel}:{" "}
@@ -115,17 +115,17 @@ export function DonutChart({
         {segments.map((segment) => (
           <li
             key={segment.key}
-            className="flex items-center gap-2.5 text-sm text-muted-foreground"
+            className="flex min-w-0 items-center gap-2.5 text-sm text-muted-foreground"
           >
             <span
               aria-hidden="true"
               className={`h-2.5 w-2.5 shrink-0 rounded-full ${segment.color}`}
             />
-            <span className="font-medium">{segment.label}</span>
-            <span className="ml-auto font-semibold tabular-nums text-foreground">
+            <span className="min-w-0 truncate font-medium">{segment.label}</span>
+            <span className="ml-auto shrink-0 font-semibold tabular-nums text-foreground">
               {formatCount(segment.value)}
             </span>
-            <span className="w-10 text-right tabular-nums">
+            <span className="w-10 shrink-0 text-right tabular-nums">
               {Math.round(percentOf(segment, total))}%
             </span>
           </li>
@@ -174,23 +174,23 @@ export function DistributionBar({
         ) : null}
       </div>
 
-      <ul className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-x-6 gap-y-2 xl:grid-cols-2">
         {segments.map((segment) => (
           <li
             key={segment.key}
-            className="flex items-center gap-2.5 text-sm text-muted-foreground"
+            className="flex min-w-0 items-center gap-2.5 text-sm text-muted-foreground"
           >
             <span
               aria-hidden="true"
               className={`h-2.5 w-2.5 shrink-0 rounded-full ${segment.color}`}
             />
-            <span className="font-medium">{segment.label}</span>
+            <span className="min-w-0 truncate font-medium">{segment.label}</span>
             {hasData ? (
-              <span className="ml-auto font-semibold tabular-nums text-foreground">
+              <span className="ml-auto shrink-0 font-semibold tabular-nums text-foreground">
                 {formatCount(segment.value)}
               </span>
             ) : null}
-            <span className="w-10 text-right tabular-nums">
+            <span className="w-10 shrink-0 text-right tabular-nums">
               {Math.round(percentOf(segment, total))}%
             </span>
           </li>

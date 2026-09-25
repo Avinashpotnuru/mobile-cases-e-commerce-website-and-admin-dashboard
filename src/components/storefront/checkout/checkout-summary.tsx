@@ -169,10 +169,10 @@ export function CheckoutSummary({
         </div>
         {costs.discountCents > 0 ? (
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">
+            <dt className="min-w-0 text-muted-foreground">
               Coupon discount
               {costs.couponCode ? (
-                <span className="ml-1 rounded border border-border px-1 py-px text-[10px] font-semibold tracking-wide">
+                <span className="ml-1 inline-block max-w-[110px] truncate rounded border border-border px-1 py-px text-[10px] font-semibold tracking-wide align-middle">
                   {costs.couponCode}
                 </span>
               ) : null}

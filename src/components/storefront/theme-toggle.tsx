@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { cn } from "@/components/ui/cn";
 
 type Theme = "dark" | "light";
@@ -16,13 +15,6 @@ function applyTheme(theme: Theme) {
   } catch {
     // Storage unavailable (private mode) — theme still applies for this page.
   }
-}
-
-function readTheme(): Theme {
-  if (typeof document === "undefined") return "dark";
-  return document.documentElement.classList.contains("dark")
-    ? "dark"
-    : "light";
 }
 
 function SunIcon({ className }: { className?: string }) {
@@ -61,31 +53,23 @@ function MoonIcon({ className }: { className?: string }) {
 }
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>(readTheme);
-
-  const isDark = theme === "dark";
-
   return (
     <button
       type="button"
-      suppressHydrationWarning
       onClick={() => {
-        const next: Theme = isDark ? "light" : "dark";
-        setTheme(next);
-        applyTheme(next);
+        const html = document.documentElement;
+        const isDark = html.classList.contains("dark");
+        applyTheme(isDark ? "light" : "dark");
       }}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      aria-pressed={!isDark}
+      aria-label="Toggle color theme"
+      title="Toggle dark mode"
       className={cn(
-        "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "relative inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:h-9 sm:w-9",
         className,
       )}
     >
-      {isDark ? (
-        <SunIcon className="h-5 w-5" />
-      ) : (
-        <MoonIcon className="h-5 w-5" />
-      )}
+      <SunIcon className="hidden h-5 w-5 dark:block" />
+      <MoonIcon className="block h-5 w-5 dark:hidden" />
     </button>
   );
 }

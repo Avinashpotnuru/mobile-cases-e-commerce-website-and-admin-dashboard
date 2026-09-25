@@ -135,7 +135,7 @@ export function ProductCardView({
         aria-label={`View ${name}`}
         className="relative flex flex-1 items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
-        <div className="flex h-44 w-full items-center justify-center pl-14 pr-6 transition-[padding] duration-500 ease-out sm:h-48 lg:pl-6 lg:group-hover:pl-16">
+        <div className="flex h-44 w-full items-center justify-center pl-6 pr-6 transition-[padding] duration-500 ease-out sm:h-48 lg:group-hover:pl-16">
           <div className="flex h-full items-center justify-center transition-transform duration-500 ease-out group-hover:rotate-[30deg]">
             {image ? (
               <Image
@@ -167,14 +167,14 @@ export function ProductCardView({
 
       <Link
         href={href}
-        className="absolute inset-y-0 left-0 z-10 flex w-12 items-center justify-center bg-foreground text-background transition-transform duration-500 ease-out lg:-translate-x-full lg:group-hover:translate-x-0"
+        className="absolute inset-y-0 left-0 z-10 flex w-12 -translate-x-full items-center justify-center bg-foreground text-background transition-transform duration-500 ease-out lg:group-hover:translate-x-0"
       >
         <span className="max-h-[80%] overflow-hidden whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] [writing-mode:vertical-rl] rotate-180">
           {name}
         </span>
       </Link>
 
-      <div className="mt-4 flex w-full items-center justify-between pl-14 transition-[padding] duration-500 ease-out lg:pl-0 lg:group-hover:pl-14">
+      <div className="mt-4 flex w-full items-center justify-between transition-[padding] duration-500 ease-out lg:group-hover:pl-14">
         {productId ? (
           <WishlistButton productId={productId} productName={name} />
         ) : (

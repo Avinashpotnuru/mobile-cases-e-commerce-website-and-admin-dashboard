@@ -239,7 +239,7 @@ function DiscountTicket({
           }`}
         />
         <div className={`flex items-center justify-between gap-4 p-6 ${featured ? "" : "pt-5"}`}>
-          <div>
+          <div className="min-w-0">
             <p
               className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
                 featured ? "text-stone-500" : "text-muted-foreground"
@@ -248,7 +248,7 @@ function DiscountTicket({
               Copy this code
             </p>
             <code
-              className={`mt-1 block font-mono text-lg font-bold tracking-[0.14em] ${
+              className={`mt-1 block max-w-full truncate font-mono text-lg font-bold tracking-[0.14em] ${
                 featured ? "text-stone-100" : "text-foreground"
               }`}
             >

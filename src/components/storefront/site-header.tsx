@@ -26,7 +26,6 @@ const MOBILE_LINKS = [
   { href: "/products", label: "Products" },
   { href: "/brands", label: "Brands" },
   { href: "/coupons", label: "Coupons" },
-  { href: "/saved", label: "Saved cases" },
   { href: "/cart", label: "Cart" },
   { href: "/account", label: "My account" },
 ];
@@ -120,9 +119,9 @@ function HeartIcon({ className }: { className?: string }) {
 }
 
 const iconButton =
-  "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "relative inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:h-9 sm:w-9";
 
-export function SiteHeader(_props?: { cartCount?: number }) {
+export function SiteHeader() {
   const pathname = usePathname();
   const cartCount = useCartCount();
   const wishlistCount = useWishlistCount();
@@ -225,7 +224,7 @@ export function SiteHeader(_props?: { cartCount?: number }) {
             : "border-transparent bg-background/60",
         )}
       >
-        <Container className="relative flex h-16 items-center justify-between gap-4">
+        <Container className="relative flex h-14 items-center justify-between gap-3 sm:h-16 sm:gap-4">
           <Link
             href="/"
             className="group flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -233,7 +232,7 @@ export function SiteHeader(_props?: { cartCount?: number }) {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background transition-transform duration-500 group-hover:rotate-[8deg]">
               <span className="font-display text-sm font-semibold">M</span>
             </span>
-            <span className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+            <span className="hidden font-display text-lg font-semibold tracking-tight text-foreground sm:block sm:text-xl">
               Mobile Cases
             </span>
           </Link>
@@ -281,7 +280,7 @@ export function SiteHeader(_props?: { cartCount?: number }) {
             <Link
               href="/products"
               aria-label="Search cases"
-              className={cn(iconButton, "hidden sm:inline-flex")}
+              className={iconButton}
             >
               <SearchIcon className="h-5 w-5" />
             </Link>
@@ -298,6 +297,7 @@ export function SiteHeader(_props?: { cartCount?: number }) {
               <UserIcon className="h-5 w-5" />
             </Link>
 
+            <div className="hidden sm:flex">
             <Link
               href="/saved"
               aria-label={
@@ -314,6 +314,7 @@ export function SiteHeader(_props?: { cartCount?: number }) {
                 </span>
               ) : null}
             </Link>
+            </div>
 
             <Link
               href="/cart"
@@ -422,6 +423,30 @@ export function SiteHeader(_props?: { cartCount?: number }) {
           </div>
 
           <nav aria-label="Mobile navigation" className="flex flex-col px-3 py-4">
+            <Link
+              href="/saved"
+              tabIndex={open ? 0 : -1}
+              onClick={() => setOpen(false)}
+              style={{
+                transitionDelay: open ? "0ms" : "0ms",
+              }}
+              className={cn(
+                "group mb-2 flex items-center justify-between rounded-lg bg-muted px-3 py-3.5 font-display text-lg font-medium text-foreground transition-all duration-300 hover:bg-muted",
+                open ? "translate-x-0 opacity-100" : "translate-x-6 opacity-0",
+              )}
+            >
+              <span className="flex items-center gap-2.5">
+                <HeartIcon className="h-5 w-5 text-accent" />
+                Saved cases
+                {wishlistCount > 0 ? (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold text-accent-foreground tabular-nums">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                ) : null}
+              </span>
+              <ArrowIcon className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent" />
+            </Link>
+
             {MOBILE_LINKS.map((link, index) => (
               <Link
                 key={link.href}

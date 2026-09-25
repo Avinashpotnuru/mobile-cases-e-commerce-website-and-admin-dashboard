@@ -32,7 +32,7 @@ export function ConfirmDialog({
 
   return (
     <AdminDialog open={open} onClose={pending ? () => {} : onClose} title={title}>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="text-sm break-words text-muted-foreground">{description}</p>
       <div className="mt-6 flex justify-end gap-3">
         <Button variant="outline" onClick={onClose} disabled={pending}>
           Cancel
