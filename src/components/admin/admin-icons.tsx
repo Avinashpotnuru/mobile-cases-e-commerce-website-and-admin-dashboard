@@ -172,6 +172,14 @@ export function ChevronRightIcon(props: AdminIconProps) {
   );
 }
 
+export function ChevronLeftIcon(props: AdminIconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="m15 5-7 7 7 7" />
+    </IconBase>
+  );
+}
+
 export function ArrowUpRightIcon(props: AdminIconProps) {
   return (
     <IconBase {...props}>

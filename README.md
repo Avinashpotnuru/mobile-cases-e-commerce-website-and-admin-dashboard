@@ -156,12 +156,26 @@ Public endpoints (JSON envelope: `{ ok: true, data }` / `{ ok: false, error }`):
 | POST   | `/api/customer/logout`                   | Sign out                            |
 | GET/POST/DELETE | `/api/account/addresses`        | Customer address book               |
 
-Admin endpoints (`/api/admin/**`) are guarded by `requireAdmin()` (session-based authentication via `/api/admin/login`, `/api/admin/logout`, and `/api/admin/session`). They cover brand/model/product/inventory/order/coupon create, update, soft-delete, and inventory stock operations:
+Admin endpoints (`/api/admin/**`) are guarded by `requireAdmin()` (session-based authentication via `/api/admin/login`, `/api/admin/logout`, and `/api/admin/session`). They cover brand, model, product, inventory, order, and coupon management with soft-deletes and atomic stock operations:
 
-| Method | Endpoint                        | Description                          |
-| ------ | ------------------------------- | ------------------------------------ |
-| GET/POST | `/api/admin/coupons`          | List / create coupons                |
-| PATCH/DELETE | `/api/admin/coupons/{id}`  | Update / deactivate a coupon         |
+| Method | Endpoint                              | Description                          |
+| ------ | ------------------------------------- | ------------------------------------ |
+| GET/POST | `/api/admin/brands`                 | List / create brands                 |
+| GET/PATCH/DELETE | `/api/admin/brands/{id}`    | Read / update / soft-delete a brand  |
+| GET/POST | `/api/admin/mobile-models`          | List / create mobile models          |
+| GET/PATCH/DELETE | `/api/admin/mobile-models/{id}`| Read / update / soft-delete a model |
+| GET/POST | `/api/admin/products`               | List / create products               |
+| GET/PATCH/DELETE | `/api/admin/products/{id}`   | Read / update / soft-delete a product |
+| POST | `/api/admin/products/{id}/compatibility` | Attach a compatible model          |
+| DELETE | `/api/admin/products/{id}/compatibility/{modelId}` | Remove a compatible model |
+| GET/POST | `/api/admin/inventory`             | List / create inventory records      |
+| GET/PATCH/DELETE | `/api/admin/inventory/{id}` | Read / update / delete inventory     |
+| POST | `/api/admin/inventory/{id}/adjust`  | Adjust stock by a delta              |
+| PATCH | `/api/admin/inventory/{id}/stock`  | Set an absolute stock level          |
+| GET | `/api/admin/orders`                   | List orders                          |
+| GET/PATCH | `/api/admin/orders/{id}`            | Read / update an order               |
+| GET/POST | `/api/admin/coupons`                | List / create coupons                |
+| GET/PATCH/DELETE | `/api/admin/coupons/{id}`   | Read / update / deactivate a coupon  |
 
 All list endpoints support `page` & `pageSize` query params (validated positive integers, capped at 100).
 
@@ -187,6 +201,8 @@ A premium dark-and-gold visual identity lives in `src/app/globals.css` (CSS vari
 ## Status
 
 Implemented: project architecture, design system, database layer (brands, mobile models, products, product compatibility, inventory, customers, customer sessions, address book, reviews, orders, coupons), seed data, the full storefront (home, brand/model selection — including `/brands/[slug]` and `/models/[slug]` —, product listing with search/filter/sort, product details with customer reviews and ratings, sale pricing with compare-at prices, cart, checkout with coupon redemption and live costs, order creation with a linked customer account, order confirmation with a discount breakdown, order history), customer accounts (sign up, sign in, account area), saved-cases wishlist, an address book with checkout prefill, a public `/coupons` offers page with copy-to-clipboard codes + an FAQ, a storefront Shop FAQ, and the admin app (authentication, dashboard, catalog/product/inventory/order/coupon management).
+
+The admin catalog tables are powered by a shared `DataTable` component: row selection with bulk actions, column visibility toggle, CSV export of the current view, expandable detail rows, a sticky header, footer totals, multi-column sorting, view preferences (sorting + column visibility) persisted to `localStorage`, and a premium responsive pagination with a rows-per-page selector.
 
 Not yet built for production: a real payment gateway (checkout currently uses a dummy/test provider), transactional email, refund/restock automation on cancellations, automated tests, and deployment configuration. See `IMPLEMENTATION_STATUS.md` for the live roadmap.
 

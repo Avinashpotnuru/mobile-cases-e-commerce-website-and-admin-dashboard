@@ -27,6 +27,7 @@ export function OrderAdmin() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [selected, setSelected] = useState<OrderListItem | null>(null);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export function OrderAdmin() {
 
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
   });
   if (search) {
     params.set("q", search);
@@ -133,7 +134,12 @@ export function OrderAdmin() {
             start={start}
             end={end}
             total={result.total}
+            pageSize={pageSize}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
           {result.total === 0 ? (
             <div className="text-center">

@@ -23,6 +23,7 @@ export function CouponAdmin() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
   const [editing, setEditing] = useState<CouponRow | null | undefined>(
     undefined,
@@ -42,7 +43,7 @@ export function CouponAdmin() {
 
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
   });
   if (search) {
     params.set("search", search);
@@ -80,6 +81,24 @@ export function CouponAdmin() {
       );
     } finally {
       setDeactivatingPending(false);
+    }
+  }
+
+  async function handleBulkDeactivate(coupons: CouponRow[]) {
+    setDeactivateError(null);
+    try {
+      await Promise.all(
+        coupons.map((coupon) =>
+          apiRequest(`/api/admin/coupons/${coupon._id}`, {
+            method: "DELETE",
+          }),
+        ),
+      );
+      refresh();
+    } catch (error) {
+      setDeactivateError(
+        error instanceof Error ? error.message : "Something went wrong.",
+      );
     }
   }
 
@@ -143,6 +162,7 @@ export function CouponAdmin() {
             coupons={result.items}
             onEdit={(coupon) => setEditing(coupon)}
             onDeactivate={(coupon) => setDeactivating(coupon)}
+            onBulkDeactivate={handleBulkDeactivate}
           />
           <CatalogPagination
             page={result.page}
@@ -150,7 +170,12 @@ export function CouponAdmin() {
             start={start}
             end={end}
             total={result.total}
+            pageSize={pageSize}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
           {result.total === 0 ? (
             <div className="text-center">

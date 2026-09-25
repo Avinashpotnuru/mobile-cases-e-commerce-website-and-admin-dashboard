@@ -38,6 +38,7 @@ export function ProductAdmin() {
   const [brandFilter, setBrandFilter] = useState("all");
   const [modelFilter, setModelFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
   const [brands, setBrands] = useState<BrandRow[]>([]);
   const [models, setModels] = useState<MobileModelRow[]>([]);
@@ -87,7 +88,7 @@ export function ProductAdmin() {
 
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
     includeArchived: "true",
     sort: "newest",
   });
@@ -171,6 +172,30 @@ export function ProductAdmin() {
         method: "DELETE",
       });
       setArchiving(null);
+      refresh();
+    } catch (cause) {
+      if (cause instanceof AdminUnauthorized) {
+        router.push("/admin/login");
+        return;
+      }
+      setActionError(
+        cause instanceof AdminApiError
+          ? cause.message
+          : "Something went wrong.",
+      );
+    }
+  }
+
+  async function handleBulkArchive(products: ProductRow[]) {
+    setActionError(null);
+    try {
+      await Promise.all(
+        products.map((product) =>
+          apiRequest(`/api/admin/products/${product._id}`, {
+            method: "DELETE",
+          }),
+        ),
+      );
       refresh();
     } catch (cause) {
       if (cause instanceof AdminUnauthorized) {
@@ -281,6 +306,7 @@ export function ProductAdmin() {
             stockMap={stockMap}
             onEdit={(product) => setEditing(product)}
             onArchive={(product) => setArchiving(product)}
+            onBulkArchive={handleBulkArchive}
           />
           <CatalogPagination
             page={result.page}
@@ -288,7 +314,12 @@ export function ProductAdmin() {
             start={start}
             end={end}
             total={result.total}
+            pageSize={pageSize}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
           {result.total === 0 ? (
             <div className="text-center">

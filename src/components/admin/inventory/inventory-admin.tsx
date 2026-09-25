@@ -26,6 +26,7 @@ export function InventoryAdmin() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [status, setStatus] = useState("");
   const [mobileModelId, setMobileModelId] = useState("");
   const [manage, setManage] = useState<InventoryAdminRow | null>(null);
@@ -87,7 +88,7 @@ export function InventoryAdmin() {
 
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
     includeArchived: "true",
   });
   if (debouncedQuery) params.set("q", debouncedQuery);
@@ -174,7 +175,12 @@ export function InventoryAdmin() {
               start={(data.page - 1) * data.pageSize + 1}
               end={Math.min(data.page * data.pageSize, data.total)}
               total={data.total}
+              pageSize={pageSize}
               onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
             />
           </>
         )

@@ -25,6 +25,7 @@ export function MobileModelAdmin() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [brandFilter, setBrandFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
   const [brands, setBrands] = useState<BrandRow[]>([]);
 
@@ -64,7 +65,7 @@ export function MobileModelAdmin() {
 
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
   });
   if (search) {
     params.set("search", search);
@@ -200,7 +201,12 @@ export function MobileModelAdmin() {
             start={start}
             end={end}
             total={result.total}
+            pageSize={pageSize}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
           {result.total === 0 ? (
             <div className="text-center">

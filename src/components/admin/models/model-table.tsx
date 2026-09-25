@@ -120,12 +120,13 @@ export function MobileModelTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <DataTable
         columns={columns({ brandNames, onEdit, onDeactivate })}
         data={models}
         getRowId={(model) => model._id}
         minWidth={760}
+        preferenceKey="models"
       />
     </div>
   );

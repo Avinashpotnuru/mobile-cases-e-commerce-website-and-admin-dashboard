@@ -116,12 +116,13 @@ export function BrandTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <DataTable
         columns={columns({ onEdit, onDeactivate })}
         data={brands}
         getRowId={(brand) => brand._id}
         minWidth={720}
+        preferenceKey="brands"
       />
     </div>
   );

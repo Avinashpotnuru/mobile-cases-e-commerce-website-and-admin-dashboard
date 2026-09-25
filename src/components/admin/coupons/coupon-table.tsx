@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActiveStatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/admin/data-table";
+import { DataTable, type ColumnMetaShape } from "@/components/admin/data-table";
 import { EmptyState } from "@/components/ui/states";
 import type { CouponRow } from "@/types/catalog";
 
@@ -23,10 +23,23 @@ const moneyFormatter = new Intl.NumberFormat("en-IN", {
 const moneyLabel = (cents: number | undefined): string | undefined =>
   cents === undefined ? undefined : moneyFormatter.format(cents / 100);
 
-function discountLabel(coupon: CouponRow): string {
-  return coupon.type === "percent"
+const discountLabel = (coupon: CouponRow): string =>
+  coupon.type === "percent"
     ? `${coupon.value}% off`
     : `${moneyLabel(coupon.value) ?? coupon.value} off`;
+
+function rulesOf(coupon: CouponRow): string[] {
+  return [
+    moneyLabel(coupon.minSubtotalCents)
+      ? `Min order ${moneyLabel(coupon.minSubtotalCents)}`
+      : null,
+    moneyLabel(coupon.maxDiscountCents)
+      ? `Max ${moneyLabel(coupon.maxDiscountCents)}`
+      : null,
+    coupon.expiresAt
+      ? `Expires ${dateFormatter.format(new Date(coupon.expiresAt))}`
+      : null,
+  ].filter(Boolean) as string[];
 }
 
 function columns({
@@ -50,23 +63,25 @@ function columns({
     {
       accessorKey: "type",
       header: "Discount",
+      meta: { csv: { header: "Discount", value: discountLabel } },
       cell: (info) => discountLabel(info.row.original),
     },
     {
       accessorKey: "value",
       enableSorting: true,
       header: "Rules",
+      meta: {
+        csv: {
+          header: "Rules",
+          value: (coupon) => {
+            const rules = rulesOf(coupon);
+            return rules.length > 0 ? rules.join(" · ") : "";
+          },
+        },
+      } satisfies ColumnMetaShape<CouponRow>,
       cell: (info) => {
         const coupon = info.row.original;
-        const rules = [
-          moneyLabel(coupon.minSubtotalCents)
-            ? `Min order ${moneyLabel(coupon.minSubtotalCents)}`
-            : null,
-          moneyLabel(coupon.maxDiscountCents)
-            ? `Max ${moneyLabel(coupon.maxDiscountCents)}`
-            : null,
-          coupon.expiresAt ? `Expires ${dateFormatter.format(new Date(coupon.expiresAt))}` : null,
-        ].filter(Boolean) as string[];
+        const rules = rulesOf(coupon);
         return (
           <p className="max-w-60 truncate text-muted-foreground">
             {rules.length > 0 ? rules.join(" · ") : "\u2014"}
@@ -100,7 +115,10 @@ function columns({
     {
       accessorFn: (coupon) => new Date(coupon.updatedAt).getTime(),
       enableSorting: true,
-      meta: { align: "right" },
+      meta: {
+        align: "right",
+        csv: { header: "Updated", value: (coupon) => coupon.updatedAt },
+      } satisfies ColumnMetaShape<CouponRow>,
       header: "Updated",
       cell: (info) => (
         <span className="tabular-nums text-muted-foreground">
@@ -111,7 +129,7 @@ function columns({
     {
       id: "actions",
       enableSorting: false,
-      meta: { align: "right" },
+      meta: { align: "right", csv: { exclude: true } },
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
@@ -141,10 +159,12 @@ export function CouponTable({
   coupons,
   onEdit,
   onDeactivate,
+  onBulkDeactivate,
 }: {
   coupons: CouponRow[];
   onEdit: (coupon: CouponRow) => void;
   onDeactivate: (coupon: CouponRow) => void;
+  onBulkDeactivate: (coupons: CouponRow[]) => Promise<void> | void;
 }) {
   if (coupons.length === 0) {
     return (
@@ -156,12 +176,55 @@ export function CouponTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <DataTable
         columns={columns({ onEdit, onDeactivate })}
         data={coupons}
         getRowId={(coupon) => coupon._id}
         minWidth={760}
+        preferenceKey="coupons"
+        exportFilename="coupons.csv"
+        bulkActions={[
+          {
+            label: "Deactivate",
+            variant: "outline",
+            onAction: onBulkDeactivate,
+          },
+        ]}
+        expandContent={({ row }) => {
+          const coupon = row.original;
+          const rules = rulesOf(coupon);
+          return (
+            <div className="grid gap-x-8 gap-y-5 text-sm sm:grid-cols-3">
+              <dl className="space-y-0.5">
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Code
+                </dt>
+                <dd className="font-mono font-semibold">{coupon.code}</dd>
+                <dd>{discountLabel(coupon)}</dd>
+              </dl>
+              <dl className="space-y-0.5">
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Rules
+                </dt>
+                <dd>{rules.length > 0 ? rules.join(" · ") : "\u2014"}</dd>
+              </dl>
+              <dl className="space-y-0.5">
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Usage
+                </dt>
+                <dd className="tabular-nums">
+                  {coupon.usageLimit
+                    ? `${coupon.usedCount} / ${coupon.usageLimit} redemptions`
+                    : `${coupon.usedCount} redemptions`}
+                </dd>
+                <dd className="text-xs text-muted-foreground">
+                  Status: <span className="capitalize">{coupon.status}</span>
+                </dd>
+              </dl>
+            </div>
+          );
+        }}
       />
     </div>
   );

@@ -23,6 +23,7 @@ export function BrandAdmin() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
   const [editing, setEditing] = useState<BrandRow | null | undefined>(undefined);
   const [creating, setCreating] = useState(false);
@@ -40,7 +41,7 @@ export function BrandAdmin() {
 
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
   });
   if (search) {
     params.set("search", search);
@@ -146,7 +147,12 @@ export function BrandAdmin() {
             start={start}
             end={end}
             total={result.total}
+            pageSize={pageSize}
             onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
           {result.total === 0 ? (
             <div className="text-center">
